@@ -1,0 +1,59 @@
+# QLoRA SFT for structured extraction from 10-K filings.
+# Checked in so every run is reproducible from a commit; src/train/sft.py snapshots the resolved
+# config next to each adapter.
+
+model_id: meta-llama/Llama-3.1-8B-Instruct
+run_name: llama31-8b-qlora
+
+# The longest example in the corpus runs past 8192 tokens, and an over-long sequence is truncated
+# from the end -- which is the target. 12288 clears the maximum with headroom; see
+# `python -m src.train.measure` for the per-split token distribution this was set from.
+max_seq_len: 12288
+
+# 4-bit NF4 with double quantization: an 8B base in ~5.5GB, leaving room for activations at this
+# sequence length on a single 40GB card.
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+bnb_4bit_use_double_quant: true
+
+lora:
+  r: 32
+  alpha: 64
+  dropout: 0.05
+  # Attention plus MLP. Attention-only is cheaper but consistently weaker when the task requires
+  # producing a fixed output format rather than adjusting style.
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+training:
+  num_train_epochs: 3
+  learning_rate: 2.0e-4
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  # Long sequences mean batch size 1 per device; accumulation carries the effective batch.
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  per_device_eval_batch_size: 1
+  gradient_checkpointing: true
+  bf16: true
+  optim: paged_adamw_8bit
+  max_grad_norm: 1.0
+  weight_decay: 0.0
+  logging_steps: 5
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: eval_loss
+  greater_is_better: false
+  seed: 42
+
+wandb:
+  project: finetuning-edgar
+  enabled: true

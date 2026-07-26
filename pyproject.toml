@@ -1,0 +1,50 @@
+[project]
+name = "finetuning-edgar"
+version = "0.1.0"
+description = "Fine-tuning open-source LLMs to extract structured data from SEC EDGAR filings"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "edgartools>=3.0.0",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "pandas>=2.2",
+    "pydantic>=2.6",
+    "python-dotenv>=1.0",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+labels = [
+    "anthropic>=0.40",
+]
+train = [
+    "torch>=2.3",
+    "transformers>=4.42",
+    "datasets>=2.19",
+    "trl>=0.9",
+    "peft>=0.11",
+    "bitsandbytes>=0.43",
+    "unsloth",
+    "wandb>=0.17",
+    "accelerate>=0.31",
+]
+eval = [
+    "scikit-learn>=1.4",
+    "jsonschema>=4.22",
+]
+demo = [
+    "gradio>=4.36",
+    "huggingface_hub>=0.23",
+]
+dev = [
+    "pytest>=8.2",
+    "ruff>=0.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
