@@ -124,6 +124,10 @@ def test_encode_split_reports_the_supervised_share():
 
 def test_collator_pads_labels_with_ignore_index():
     """Padding labels with pad_token_id instead trains the model to emit padding."""
+    # The collator returns tensors, so this is the one test that needs torch. Training runs on a
+    # rented GPU box; the laptop keeps a lean venv, so skip rather than pull ~2.5GB of wheels.
+    pytest.importorskip("torch")
+
     short, _ = encode_example(TOK, make_row(user="A"), max_seq_len=512)
     long, _ = encode_example(TOK, make_row(user="B" * 50), max_seq_len=512)
 

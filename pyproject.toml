@@ -48,3 +48,8 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint]
+# Pinned explicitly: ruff's implicit defaults widen between releases, so an unpinned
+# rule set makes lint results depend on whichever ruff a fresh venv happens to install.
+select = ["E4", "E7", "E9", "F", "I"]
