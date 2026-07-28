@@ -235,6 +235,106 @@ before any large download. Repo now pushed to GitHub.
 
 ---
 
+## Anticipated questions
+
+Known soft spots, with the answer written down before someone asks. A gap that is stated and
+measured is a different thing from one that is missing.
+
+### Q1 — "If XBRL already gives you exact numbers for free, why do you need a model at all?"
+The premise question, and the honest answer is that XBRL is the *answer key*, not a substitute for
+the task.
+
+XBRL exists only for SEC registrants filing since ~2009 in a structured taxonomy. The model reads
+**text**, which is what is available for private-company filings, credit agreements, foreign
+issuers, pre-XBRL archives, and PDFs generally. And half the extraction schema — risk-factor
+categories and summaries — has no XBRL counterpart at all ([D3](#d3--teacher-model-only-for-the-qualitative-half)).
+
+The project's design deliberately uses the one domain where an exact answer key happens to exist, so
+the extractor's accuracy can be measured against filed truth instead of against another model's
+opinion. That is a statement about **eval methodology**, not about the deployment target.
+
+### Q2 — "What are your error bars?"
+Currently: unreported, and the test set is small enough that this matters.
+
+12 held-out companies × ~4 scored numeric fields ≈ 48 comparisons. At the observed 95.8%, the Wilson
+95% interval is **[86.0%, 98.8%]** — 12.8 points wide. Any statistic computed *per filing* rather
+than per field is far worse: n=12 gives roughly a ±22-point interval.
+
+Consequence: a fine-tuned-vs-baseline gap smaller than ~10 points on numerics is not distinguishable
+from sampling noise at this test-set size. Bootstrap CIs over filings belong in `score_dataset`, and
+the comparison table should carry them. Until it does, treat close results as ties.
+
+The test set is 12 companies because splits are company-level over a 185-ticker universe
+([D5](#d5--split-by-company-never-by-filing)); widening it means growing the universe, not
+re-slicing.
+
+### Q3 — "How do you know the base model hadn't already memorized these filings?"
+Not yet controlled for. Llama 3.1's pretraining cutoff is ~Dec 2023 and 10-K filings are public web
+text, so any test filing predating the cutoff is plausibly in the base model's training data. That
+inflates the *base* baseline, deflates the measured improvement from fine-tuning, and muddies both
+directions of the headline comparison.
+
+Mitigation is cheap because ingestion takes the **latest** 10-K per company
+(`src/data/pipeline.py`): most of the corpus is FY2024–FY2025 and therefore post-cutoff already. The
+work is to verify it rather than assume it — tabulate `fiscal_year` across the test split, report the
+distribution in the README, and state the cutoff it is being compared against. Where a test company's
+latest filing predates the cutoff, say so rather than quietly leaving it in.
+
+### Q4 — "152 training examples? Why so few?"
+One 10-K per company: `pipeline.ingest_ticker` defaults to `n_filings=1` over 185 tickers, of which
+155 hash into train and 152 survive labeling. The original plan targeted 1,500–3,000.
+
+Because splits are company-level, pulling *N* years per company is leakage-safe by construction —
+`--n-filings 5` is a single flag and gives ~760 train examples with no change to the split logic.
+That has not been done, for a reason worth stating rather than hiding: consecutive filings from the
+same company are near-duplicate boilerplate, so 5× the filings is well short of 5× the effective
+data, while teacher cost scales linearly (~$2 → ~$10).
+
+The right framing is an **ablation** — 152 vs ~760 — which is the data-scaling row the plan already
+wanted for Days 9–10. It converts "why so little data?" into a measured curve.
+
+### Q5 — "You claim ~1/20th the inference cost. Show the math."
+Not yet supported. `estimate_cost` prices API tokens only, and `src/eval/run.py:97` says so
+explicitly: a served model's cost is GPU-hours, not tokens. The claim needs measured throughput
+(tokens/sec for the 8B at this sequence length, on a named GPU at a named hourly rate) set against
+the Sonnet run's $0.71 over 12 filings. Until that exists, the cost bullet is an estimate, not a
+result, and should be phrased as one.
+
+### Q6 — "Model selection on `eval_loss`, but you report exact-match and F1?"
+Yes — `metric_for_best_model: eval_loss` with `load_best_model_at_end`. Cross-entropy on held-out
+filings is a proxy for the metrics that are actually reported. A `compute_metrics` callback scoring
+schema-validity and numeric match per epoch would select on the real objective; it was traded away to
+keep rented-GPU time down at 3 epochs, where checkpoint choice is a weak lever. Worth revisiting if
+the run is extended.
+
+### Q7 — Reproducibility is partial
+Seeds are set (`training.seed: 42`, propagated to LoRA init) and splits are a deterministic ticker
+hash, so data assignment is stable. But `pyproject.toml` pins only lower bounds (`>=`) and there is
+no lockfile, so `configs/sft_llama31_8b.yaml`'s claim that "every run is reproducible from a commit"
+overstates it — the same commit resolves to different dependency versions over time (this already
+bit the project once via ruff, [D24](#d24--rufs-rule-set-is-pinned-explicitly)). Either commit a
+lockfile or soften the comment.
+
+Related: results come from a **single seed and a single run**, so a small margin between
+configurations carries no variance estimate.
+
+### Q8 — Risk-factor F1 rests on lexical overlap
+`src/eval/metrics.py:218` matches predicted to gold risks by title-weighted lexical overlap —
+deterministic, parameter-free, and documented as a **lower bound**. A semantically correct
+paraphrase that shares few tokens scores as a miss. Embedding similarity would be the obvious
+alternative and was rejected for v1 because it introduces a model into the metric, which is the
+thing this project's eval design exists to avoid. The conservative direction is the safe one for a
+headline claim, but the number understates true performance.
+
+### Q9 — Licensing of the published artifact
+Llama 3.1's community license imposes conditions on derivatives, including naming ("Llama" prefix)
+and "Built with Llama" attribution — relevant because the plan publishes weights and a model card to
+HF Hub. Qwen2.5-7B-Instruct is Apache 2.0 and carries none of that, which is an argument for Qwen
+beyond merely dodging the gated-repo problem. SEC filing content is public domain; the derived
+dataset is not encumbered.
+
+---
+
 ## Open questions
 
 - **Llama 3.1 8B is gated** and `HF_TOKEN` is empty (401 on both repos). Either accept the license
