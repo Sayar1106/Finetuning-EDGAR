@@ -166,6 +166,25 @@ hits, and a full relabel after the XBRL fix cost $0.
 Ruff's implicit defaults widen between releases. Unpinned, lint results depend on whichever version
 a fresh venv happens to install — 57 errors appeared on untouched code after one such widening.
 
+### D25 — Every headline metric carries a bootstrap interval
+`score_dataset` computes 95% percentile-bootstrap CIs by default (10,000 resamples, seed 0) and
+`format_report` prints them beside every point estimate. Reporting a bare rate at n=12 invites a
+comparison the data cannot support, so the interval is on by default rather than opt-in.
+
+**The resampling unit is the filing, not the field instance.** The four numeric fields within one
+filing are correlated — a filer reporting in thousands tends to produce a scale error on all four at
+once — so resampling instances would treat 48 correlated outcomes as 48 independent ones and report
+an interval roughly √4 too narrow. `tests/test_eval.py` asserts the width is consistent with 12
+clusters rather than 48 draws, which is the assertion that would catch a regression to instance-level
+resampling.
+
+Metrics no resample can evaluate are **omitted rather than zeroed** — risk F1 when every filing
+satisfies Item 1A by cross-reference is undefined, and `0.0 [0, 0]` would read as a measured failure.
+
+*Known limitation:* the percentile bootstrap pins to the observed extremes, so near 100% the upper
+bound is 100% and the interval is one-sided in effect. Fine for the comparison being made; worth
+naming rather than presenting the interval as symmetric.
+
 ---
 
 ## Incident log
@@ -254,15 +273,14 @@ the extractor's accuracy can be measured against filed truth instead of against 
 opinion. That is a statement about **eval methodology**, not about the deployment target.
 
 ### Q2 — "What are your error bars?"
-Currently: unreported, and the test set is small enough that this matters.
+Reported — see [D25](#d25--every-headline-metric-carries-a-bootstrap-interval). Every headline metric
+carries a 95% percentile-bootstrap interval, and the eval report prints them next to the point
+estimate.
 
-12 held-out companies × ~4 scored numeric fields ≈ 48 comparisons. At the observed 95.8%, the Wilson
-95% interval is **[86.0%, 98.8%]** — 12.8 points wide. Any statistic computed *per filing* rather
-than per field is far worse: n=12 gives roughly a ±22-point interval.
-
-Consequence: a fine-tuned-vs-baseline gap smaller than ~10 points on numerics is not distinguishable
-from sampling noise at this test-set size. Bootstrap CIs over filings belong in `score_dataset`, and
-the comparison table should carry them. Until it does, treat close results as ties.
+The size of them is the thing to internalize: 12 held-out companies × 4 scored numeric fields ≈ 48
+comparisons, and at ~95.8% accuracy the interval runs roughly **[87.5%, 100%]**. A
+fine-tuned-vs-baseline gap smaller than ~10 points on numerics is not distinguishable from sampling
+noise at this test-set size. Close results are ties, and the table now says so.
 
 The test set is 12 companies because splits are company-level over a 185-ticker universe
 ([D5](#d5--split-by-company-never-by-filing)); widening it means growing the universe, not

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import math
+import random
 import re
 from collections import Counter
 from dataclasses import dataclass, field
@@ -37,6 +38,29 @@ from src.labels.schema import ExtractionTarget, RiskFactor
 # `shares_outstanding_diluted` is deliberately unscored: it is absent from most filings and is not
 # covered by the grounding check, so it would inject noise rather than signal.
 SCORED_FIELDS: tuple[str, ...] = ("revenue", "net_income", "total_assets", "eps_diluted")
+
+# The test split is 12 companies. At that size a headline rate carries an interval more than ten
+# points wide, so a point estimate on its own invites a comparison the data cannot support.
+#
+# Resampling is over **filings**, not over field instances. The four numeric fields within one
+# filing are not independent -- a filing whose figures are reported in thousands tends to produce a
+# scale error on every field at once -- so resampling instances would treat 48 correlated outcomes
+# as 48 independent ones and report an interval that is too narrow. The filing is the unit that was
+# sampled from the population of companies, so it is the unit that gets resampled. See
+# `bootstrap_cis`.
+BOOTSTRAP_RESAMPLES = 10_000
+BOOTSTRAP_CONFIDENCE = 0.95
+BOOTSTRAP_SEED = 0
+
+
+@dataclass(frozen=True)
+class ConfidenceInterval:
+    low: float
+    high: float
+    confidence: float = BOOTSTRAP_CONFIDENCE
+
+    def __str__(self) -> str:
+        return f"[{self.low:.1%}, {self.high:.1%}]"
 
 # Treated as the same number: guards float round-tripping, not filer rounding.
 EXACT_TOL = 1e-9
@@ -357,6 +381,9 @@ class EvalReport:
     macro_match_f1: float = 0.0
     macro_category_accuracy: Optional[float] = None
     examples: list[ExampleScore] = field(default_factory=list)
+    # Populated by score_dataset unless bootstrapping is disabled. Keyed by metric name; see
+    # `bootstrap_cis`.
+    cis: dict[str, "ConfidenceInterval"] = field(default_factory=dict)
 
     def numeric_rate(self, field_name: str, verdicts: Iterable[str] = (EXACT, CLOSE)) -> Optional[float]:
         """Share of *scorable* instances (gold present) landing in `verdicts`."""
@@ -377,7 +404,11 @@ class EvalReport:
 
 
 def score_dataset(
-    examples: list[dict], predictions: list[str], model: str = "unknown"
+    examples: list[dict],
+    predictions: list[str],
+    model: str = "unknown",
+    bootstrap: int = BOOTSTRAP_RESAMPLES,
+    seed: int = BOOTSTRAP_SEED,
 ) -> EvalReport:
     if len(examples) != len(predictions):
         raise ValueError(f"{len(examples)} examples but {len(predictions)} predictions")
@@ -414,7 +445,105 @@ def score_dataset(
     report.macro_category_f1 = sum(cat_f1s) / len(cat_f1s) if cat_f1s else 0.0
     report.macro_match_f1 = sum(match_f1s) / len(match_f1s) if match_f1s else 0.0
     report.macro_category_accuracy = sum(cat_accs) / len(cat_accs) if cat_accs else None
+
+    # On by default: at n=12 a bare point estimate is the misleading way to report this.
+    report.cis = bootstrap_cis(report, n_resamples=bootstrap, seed=seed)
     return report
+
+
+# --------------------------------------------------------------------------------------------
+# Uncertainty
+# --------------------------------------------------------------------------------------------
+
+def _filing_stats(score: ExampleScore) -> dict:
+    """Per-filing sufficient statistics, so one resample is an add rather than a rescore."""
+    hits = scorable = 0
+    per_field: dict[str, tuple[int, int]] = {}
+    for f in SCORED_FIELDS:
+        verdict = score.numerics.get(f, NOT_SCORED)
+        f_scorable = int(verdict not in (NOT_SCORED, SPURIOUS))
+        f_hit = int(verdict in (EXACT, CLOSE))
+        per_field[f] = (f_hit, f_scorable)
+        hits += f_hit
+        scorable += f_scorable
+    return {
+        "strict": int(score.strict_valid),
+        "lenient": int(score.lenient_valid),
+        "numeric": (hits, scorable),
+        "per_field": per_field,
+        "category_f1": score.risk.category_f1 if score.risk else None,
+        "match_f1": score.risk.match_f1 if score.risk else None,
+    }
+
+
+def _percentile(sorted_values: list[float], q: float) -> float:
+    """Linear-interpolated percentile. `statistics.quantiles` would need n>=2 and a method choice;
+    this keeps the degenerate single-value case well defined."""
+    if len(sorted_values) == 1:
+        return sorted_values[0]
+    pos = q * (len(sorted_values) - 1)
+    lo = int(pos)
+    hi = min(lo + 1, len(sorted_values) - 1)
+    return sorted_values[lo] + (sorted_values[hi] - sorted_values[lo]) * (pos - lo)
+
+
+def bootstrap_cis(
+    report: EvalReport,
+    n_resamples: int = BOOTSTRAP_RESAMPLES,
+    confidence: float = BOOTSTRAP_CONFIDENCE,
+    seed: int = BOOTSTRAP_SEED,
+) -> dict[str, ConfidenceInterval]:
+    """Percentile-bootstrap intervals for the headline metrics, resampling filings with replacement.
+
+    Seeded, so a report is reproducible from its inputs. Metrics that no resample can evaluate --
+    risk F1 when every filing satisfies Item 1A by cross-reference, say -- are simply absent from
+    the result rather than reported as zero.
+    """
+    stats = [_filing_stats(e) for e in report.examples]
+    n = len(stats)
+    if n == 0 or n_resamples <= 0:
+        return {}
+
+    keys = ["strict_valid_rate", "lenient_valid_rate", "numeric_accuracy"]
+    keys += [f"numeric_{f}" for f in SCORED_FIELDS]
+    keys += ["macro_category_f1", "macro_match_f1"]
+    draws: dict[str, list[float]] = {k: [] for k in keys}
+
+    rng = random.Random(seed)
+    for _ in range(n_resamples):
+        sample = [stats[rng.randrange(n)] for _ in range(n)]
+
+        draws["strict_valid_rate"].append(sum(s["strict"] for s in sample) / n)
+        draws["lenient_valid_rate"].append(sum(s["lenient"] for s in sample) / n)
+
+        hits = sum(s["numeric"][0] for s in sample)
+        scorable = sum(s["numeric"][1] for s in sample)
+        if scorable:
+            draws["numeric_accuracy"].append(hits / scorable)
+
+        for f in SCORED_FIELDS:
+            f_hits = sum(s["per_field"][f][0] for s in sample)
+            f_scorable = sum(s["per_field"][f][1] for s in sample)
+            if f_scorable:
+                draws[f"numeric_{f}"].append(f_hits / f_scorable)
+
+        for key, stat in (("macro_category_f1", "category_f1"), ("macro_match_f1", "match_f1")):
+            vals = [s[stat] for s in sample if s[stat] is not None]
+            if vals:
+                draws[key].append(sum(vals) / len(vals))
+
+    tail = (1.0 - confidence) / 2.0
+    out: dict[str, ConfidenceInterval] = {}
+    for key, values in draws.items():
+        if not values:
+            continue
+        values.sort()
+        out[key] = ConfidenceInterval(
+            low=_percentile(values, tail),
+            high=_percentile(values, 1.0 - tail),
+            confidence=confidence,
+        )
+    return out
 
 
 # --------------------------------------------------------------------------------------------
@@ -426,29 +555,52 @@ def _pct(value: Optional[float]) -> str:
     return "--" if value is None else f"{value:.1%}"
 
 
+def _ci(cis: dict[str, ConfidenceInterval], key: str) -> str:
+    interval = cis.get(key)
+    return "--" if interval is None else str(interval)
+
+
 def format_report(report: EvalReport) -> str:
     """Markdown, so the same text serves the console and the README results table."""
+    c = report.cis
+    pct_label = f"{int(round(BOOTSTRAP_CONFIDENCE * 100))}% CI"
     lines = [
         f"### {report.model}  (n={report.n})",
         "",
-        "| Metric | Value |",
-        "| --- | --- |",
-        f"| Schema valid (strict) | {_pct(report.strict_valid / report.n if report.n else None)} |",
-        f"| Schema valid (after fence/prose stripping) | {_pct(report.lenient_valid / report.n if report.n else None)} |",
-        f"| Numeric accuracy (all fields) | {_pct(report.numeric_accuracy)} |",
-        f"| Risk category F1 (macro) | {_pct(report.macro_category_f1)} |",
-        f"| Risk match F1 (macro, lower bound) | {_pct(report.macro_match_f1)} |",
-        f"| Category accuracy among matched | {_pct(report.macro_category_accuracy)} |",
+        f"| Metric | Value | {pct_label} |",
+        "| --- | --- | --- |",
+        f"| Schema valid (strict) | {_pct(report.strict_valid / report.n if report.n else None)} "
+        f"| {_ci(c, 'strict_valid_rate')} |",
+        f"| Schema valid (after fence/prose stripping) "
+        f"| {_pct(report.lenient_valid / report.n if report.n else None)} "
+        f"| {_ci(c, 'lenient_valid_rate')} |",
+        f"| Numeric accuracy (all fields) | {_pct(report.numeric_accuracy)} "
+        f"| {_ci(c, 'numeric_accuracy')} |",
+        f"| Risk category F1 (macro) | {_pct(report.macro_category_f1)} "
+        f"| {_ci(c, 'macro_category_f1')} |",
+        f"| Risk match F1 (macro, lower bound) | {_pct(report.macro_match_f1)} "
+        f"| {_ci(c, 'macro_match_f1')} |",
+        f"| Category accuracy among matched | {_pct(report.macro_category_accuracy)} | -- |",
         "",
-        "| Numeric field | exact | close | scale err | wrong | missing | spurious | n/a |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        f"| Numeric field | accuracy | {pct_label} | exact | close | scale err | wrong | missing "
+        "| spurious | n/a |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for f in SCORED_FIELDS:
         t = report.numerics.get(f, Counter())
         lines.append(
-            f"| {f} | {t[EXACT]} | {t[CLOSE]} | {t[SCALE_ERROR]} | {t[WRONG]} | "
+            f"| {f} | {_pct(report.numeric_rate(f))} | {_ci(c, f'numeric_{f}')} "
+            f"| {t[EXACT]} | {t[CLOSE]} | {t[SCALE_ERROR]} | {t[WRONG]} | "
             f"{t[MISSING]} | {t[SPURIOUS]} | {t[NOT_SCORED]} |"
         )
+
+    if report.cis:
+        lines += [
+            "",
+            f"_Intervals are percentile bootstrap over filings ({BOOTSTRAP_RESAMPLES:,} resamples, "
+            f"seed {BOOTSTRAP_SEED}). Filings are the resampling unit because numeric fields within "
+            "one filing are correlated._",
+        ]
 
     skipped = report.n - report.n_risk_scored
     if skipped:
@@ -472,6 +624,17 @@ def report_to_dict(report: EvalReport) -> dict:
         "strict_valid_rate": report.strict_valid / report.n if report.n else None,
         "lenient_valid_rate": report.lenient_valid / report.n if report.n else None,
         "numeric_accuracy": report.numeric_accuracy,
+        "confidence_intervals": {
+            key: {"low": ci.low, "high": ci.high, "confidence": ci.confidence}
+            for key, ci in report.cis.items()
+        },
+        "bootstrap": {
+            "resamples": BOOTSTRAP_RESAMPLES,
+            "seed": BOOTSTRAP_SEED,
+            "unit": "filing",
+        }
+        if report.cis
+        else None,
         "numeric_by_field": {
             f: {**{v: report.numerics[f][v] for v in VERDICTS}, "accuracy": report.numeric_rate(f)}
             for f in SCORED_FIELDS

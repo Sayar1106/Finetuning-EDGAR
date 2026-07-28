@@ -283,3 +283,103 @@ def test_report_serializes_and_formats():
 def test_score_dataset_rejects_length_mismatch():
     with pytest.raises(ValueError):
         score_dataset([make_example()], [])
+
+
+# --------------------------------------------------------------------------------------------
+# Bootstrap confidence intervals
+# --------------------------------------------------------------------------------------------
+
+
+def _mixed_dataset(n_correct: int, n_wrong: int):
+    """`n_correct` perfect filings and `n_wrong` entirely wrong ones."""
+    target = make_target()
+    wrong = make_target(financials=FinancialFacts(revenue=1.0, net_income=1.0, total_assets=1.0,
+                                                  eps_diluted=1.0))
+    examples = [make_example(target) for _ in range(n_correct + n_wrong)]
+    predictions = [target.model_dump_json()] * n_correct + [wrong.model_dump_json()] * n_wrong
+    return examples, predictions
+
+
+def test_interval_brackets_the_point_estimate():
+    report = score_dataset(*_mixed_dataset(8, 4), bootstrap=2000)
+
+    ci = report.cis["numeric_accuracy"]
+    assert ci.low <= report.numeric_accuracy <= ci.high
+    assert ci.confidence == pytest.approx(0.95)
+
+
+def test_a_larger_test_set_gives_a_narrower_interval():
+    """The whole point of reporting these: n=12 cannot support the comparisons n=120 can."""
+    small = score_dataset(*_mixed_dataset(10, 2), bootstrap=2000)
+    large = score_dataset(*_mixed_dataset(100, 20), bootstrap=2000)
+
+    small_width = small.cis["numeric_accuracy"].high - small.cis["numeric_accuracy"].low
+    large_width = large.cis["numeric_accuracy"].high - large.cis["numeric_accuracy"].low
+    assert large_width < small_width / 2
+
+
+def test_resampling_is_over_filings_not_field_instances():
+    """Four numeric fields per filing are correlated -- a filing is right or wrong on all of them
+    here. Resampling instances would report an interval ~2x too narrow."""
+    report = score_dataset(*_mixed_dataset(6, 6), bootstrap=4000)
+
+    ci = report.cis["numeric_accuracy"]
+    width = ci.high - ci.low
+    # Filing-level SE at p=0.5, n=12 is ~0.144 -> ~0.57 wide. Instance-level (n=48) would be ~0.28.
+    assert width > 0.4
+
+
+def test_intervals_are_reproducible_from_the_seed():
+    a = score_dataset(*_mixed_dataset(7, 5), bootstrap=1000, seed=3)
+    b = score_dataset(*_mixed_dataset(7, 5), bootstrap=1000, seed=3)
+
+    assert a.cis == b.cis
+
+
+def test_the_seed_actually_drives_the_resampling():
+    """Checked at n=120, not n=12: twelve filings admit only thirteen distinct accuracy values, so
+    the percentile bounds land on the same points under most seeds. That coarseness is a property
+    of the test set, not of the estimator."""
+    a = score_dataset(*_mixed_dataset(100, 20), bootstrap=1000, seed=3)
+    b = score_dataset(*_mixed_dataset(100, 20), bootstrap=1000, seed=4)
+
+    assert a.cis["numeric_accuracy"] != b.cis["numeric_accuracy"]
+
+
+def test_a_unanimous_result_has_a_degenerate_interval():
+    report = score_dataset(*_mixed_dataset(5, 0), bootstrap=500)
+
+    ci = report.cis["numeric_accuracy"]
+    assert ci.low == pytest.approx(1.0) and ci.high == pytest.approx(1.0)
+
+
+def test_bootstrap_can_be_disabled():
+    report = score_dataset(*_mixed_dataset(3, 1), bootstrap=0)
+
+    assert report.cis == {}
+    assert report_to_dict(report)["bootstrap"] is None
+    assert "CI" in format_report(report)  # column stays, cells read "--"
+
+
+def test_metrics_no_resample_can_evaluate_are_omitted_not_zeroed():
+    """Every filing satisfies Item 1A by cross-reference, so risk F1 is undefined -- reporting it
+    as 0.0 with a [0, 0] interval would read as a measured failure."""
+    target = make_target()
+    examples = [make_example(target, by_reference=True) for _ in range(4)]
+    report = score_dataset(examples, [target.model_dump_json()] * 4, bootstrap=500)
+
+    assert "macro_category_f1" not in report.cis
+    assert "numeric_accuracy" in report.cis
+
+
+def test_intervals_survive_serialization_and_appear_in_the_report():
+    report = score_dataset(*_mixed_dataset(9, 3), bootstrap=1000, model="ci-model")
+
+    payload = report_to_dict(report)
+    json.dumps(payload)
+    assert payload["bootstrap"] == {"resamples": 10_000, "seed": 0, "unit": "filing"}
+    interval = payload["confidence_intervals"]["numeric_accuracy"]
+    assert interval["low"] < interval["high"]
+
+    text = format_report(report)
+    assert "95% CI" in text and "percentile bootstrap over filings" in text
