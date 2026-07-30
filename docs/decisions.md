@@ -252,27 +252,29 @@ Git history is flattened into one restore commit — the per-day commit trail is
 **Prevention.** Local venv stays lean, no model weights on this machine, `df -h /System/Volumes/Data`
 before any large download. Repo now pushed to GitHub.
 
-### I5 — Two tickers in the universe stopped resolving
-**2026-07-29.** The re-ingestion logged `Company not found` for `MMC` and `ANSS`. Not a bug in the
-fetcher: EDGAR's `company_tickers.json` lists only a company's *current* symbol, so a symbol that
-stops being current is simply absent. The two failures have different causes, which matters because
-only one of them means the company is still filing:
+### I5 — Three tickers in the universe stopped resolving
+**2026-07-29.** The re-ingestion logged `Company not found` for `MMC`, `ANSS`, and `NVEE` — 3 of 185.
+Not a bug in the fetcher: EDGAR's `company_tickers.json` lists only a company's *current* symbol, so
+a symbol that stops being current is simply absent. Two distinct causes, and the difference matters
+because only one of them means the company is still filing:
 
-| Ticker | Cause | Still files? | Latest 10-K |
-|---|---|---|---|
-| `MMC` | renamed — Marsh & McLennan now trades as **MRSH** | yes | FY2025 |
-| `ANSS` | acquired by Synopsys, delisted, `tickers: []` in EDGAR | no | FY2024 (final) |
+| Ticker | Company | Cause | Still files? | Latest 10-K |
+|---|---|---|---|---|
+| `MMC` | Marsh & McLennan | renamed, now trades as **MRSH** | yes | FY2025 |
+| `ANSS` | Ansys | acquired by Synopsys, delisted, `tickers: []` | no | FY2024 (final) |
+| `NVEE` | NV5 Global | acquired by Acuity, delisted, `tickers: []` | no | FY2024 (final) |
 
-`ANSS` is kept rather than dropped: a delisted company's historical 10-K is still a real filing with
-real XBRL, so it is valid training data. FY2024 is also still past the ~Dec-2023 pretraining cutoff
-([Q3](#q3--how-do-you-know-the-base-model-hadnt-already-memorized-these-filings)).
+The delisted two are kept rather than dropped: a delisted company's final 10-K is still a real filing
+with real XBRL, so it is valid training data, and FY2024 is still past the ~Dec-2023 pretraining
+cutoff ([Q3](#q3--how-do-you-know-the-base-model-hadnt-already-memorized-these-filings)). Their
+presence is arguably a small plus — an acquired mid-cap is exactly the kind of filer whose text a
+frontier model is least likely to have memorized.
 
-**Fix.** `CIK_OVERRIDES` in `src/data/companies.py` pins each to its CIK (`62709`, `1013462`) and
-`get_latest_10ks` prefers it over the symbol. A CIK is permanent through both a rename and a
-delisting; a ticker is not. Both CIKs were resolved by company name against SEC's map and confirmed
-to have 10-K filings, not recalled from memory. Verified live — `MMC_0000062709-26-000022.json`
-(FY2025) and `ANSS_0001013462-25-000009.json` (FY2024), all four numeric fields present, no parse
-warnings on either.
+**Fix.** `CIK_OVERRIDES` in `src/data/companies.py` pins each to its CIK (`62709`, `1013462`,
+`1532961`) and `get_latest_10ks` prefers it over the symbol. A CIK is permanent through both a rename
+and a delisting; a ticker is not. Every CIK was resolved by company name against SEC's map and
+confirmed to have 10-K filings, not recalled from memory. All three verified live — FY2025, FY2024,
+FY2024 respectively, all four numeric fields present, no parse warnings on any of them.
 
 edgartools' own suggestion for `MMC` was `MMCP` (Mag Mile Capital), an unrelated microcap. Accepting
 a fuzzy ticker match would have ingested the wrong company's 10-K and scored a model against it.
@@ -327,30 +329,77 @@ inflates the *base* baseline, deflates the measured improvement from fine-tuning
 directions of the headline comparison.
 
 Mitigation is cheap because ingestion takes the **latest** 10-K per company
-(`src/data/pipeline.py`): most of the corpus is FY2024–FY2025 and therefore post-cutoff already. The
-work is to verify it rather than assume it — tabulate `fiscal_year` across the test split, report the
-distribution in the README, and state the cutoff it is being compared against. Where a test company's
-latest filing predates the cutoff, say so rather than quietly leaving it in.
+(`src/data/pipeline.py`), and as of the 2026-07-29 re-ingestion this is now **measured, not assumed**:
 
-### Q4 — "152 training examples? Why so few?"
-One 10-K per company: `pipeline.ingest_ticker` defaults to `n_filings=1` over 185 tickers, of which
-155 hash into train and 152 survive labeling. The original plan targeted 1,500–3,000.
+| Split | Filings | Companies | FY ≥ 2024 | Fiscal years |
+|---|---|---|---|---|
+| train | 186 | 155 | 91.4% | FY2023:16 FY2024:17 FY2025:136 FY2026:17 |
+| val | 22 | 18 | 90.9% | FY2023:2 FY2024:2 FY2025:15 FY2026:3 |
+| **test** | **12** | **12** | **100%** | **FY2025:10 FY2026:2** |
+
+**Every test filing postdates the cutoff by at least a year** — no test company's latest 10-K is
+FY2023 or earlier, so the headline metric is not measurable on any filing the base model could have
+memorized. The 18 FY2023 filings sit entirely in train and val, where memorization would if anything
+work *against* the fine-tune's apparent gain rather than inflate it.
+
+This is a property of the corpus, not a filter applied to flatter the result: the split is assigned by
+hashing the ticker (`splits.py:23`) before fiscal year is known, so no filing was moved to make this
+table look better. Reproduce with the ticker hash and `fiscal_year` from `data/raw/`.
+
+### Q4 — "186 training examples? Why so few?"
+One 10-K per company over a 185-ticker universe, with 18 companies carrying extra fiscal years from
+an earlier partial run. As built on 2026-07-29: **220 filings from 185 companies → 186 train / 22 val
+/ 12 test**, all 220 labeled with zero teacher failures. The original plan targeted 1,500–3,000.
 
 Because splits are company-level, pulling *N* years per company is leakage-safe by construction —
-`--n-filings 5` is a single flag and gives ~760 train examples with no change to the split logic.
+`--n-filings 5` is a single flag and gives ~900 train examples with no change to the split logic.
 That has not been done, for a reason worth stating rather than hiding: consecutive filings from the
 same company are near-duplicate boilerplate, so 5× the filings is well short of 5× the effective
-data, while teacher cost scales linearly (~$2 → ~$10).
+data. The cost objection is now **measured and weaker than it looked**: the full 220-filing labeling
+run cost **$1.40**, so 5× is ~$7, not the ~$10 previously guessed from a rougher estimate.
 
-The right framing is an **ablation** — 152 vs ~760 — which is the data-scaling row the plan already
-wanted for Days 9–10. It converts "why so little data?" into a measured curve.
+That makes the honest constraint *marginal value*, not money. The right framing is an **ablation** —
+186 vs ~900 — which is the data-scaling row the plan already wanted for Days 9–10. It converts "why
+so little data?" into a measured curve, and at $7 the experiment is cheap enough that declining to
+run it needs a better reason than cost.
 
 ### Q5 — "You claim ~1/20th the inference cost. Show the math."
-Not yet supported. `estimate_cost` prices API tokens only, and `src/eval/run.py:97` says so
-explicitly: a served model's cost is GPU-hours, not tokens. The claim needs measured throughput
-(tokens/sec for the 8B at this sequence length, on a named GPU at a named hourly rate) set against
-the Sonnet run's $0.71 over 12 filings. Until that exists, the cost bullet is an estimate, not a
-result, and should be phrased as one.
+**Still an estimate, and labeled as one** — but the measurable half is now measured, and the
+unmeasured half has its arithmetic pre-specified so the gap is a missing number rather than a missing
+method.
+
+**What is measured.** `src/labels/teacher.py` records `response.usage` per call and
+`src/labels/build.py` prints the run's spend, so dataset cost is a reported figure instead of a
+reconstruction. The 2026-07-29 run: **220 filings, ~0.56 MTok in / ~0.17 MTok out on Haiku 4.5 →
+$1.40.** Output averages 59.5 tokens per risk factor and input 2,526 tokens per filing (the 12K-char
+`RISK_CHARS` cap does the work). The same corpus through Sonnet 5 would have been ~$4.19 — the
+teacher-model choice in [D3](#d3--teacher-model-only-for-the-qualitative-half) is a 3× saving, which
+is the kind of claim that should come with the number attached.
+
+*Caveat on that $1.40:* per-token rates are hard-coded in `PRICING_USD_PER_MTOK` as published on
+2026-07-29, and the figure above was computed from sampled token counts before the accounting shipped
+— so it excludes the structured-output schema tokens on each call (~$0.07) and the two smoke-test
+filings. The billing console is authoritative; the next labeling run will report its own total
+directly.
+
+**What is not measured, and exactly what would settle it.** The serving claim compares two things
+priced in different units — API tokens versus GPU-hours — which `src/eval/run.py:97` already flags.
+The comparison needs three numbers, none of which exist yet:
+
+| Needed | How to get it |
+|---|---|
+| Throughput: tokens/sec for the 8B at 12K sequence length | Measure during the GPU rental, on the same 12 test filings |
+| GPU cost: $/hour for the named instance | The rental invoice |
+| Tokens per filing: input + output at inference | Already known — ~24.7 KB excerpt ≈ 6.2K input tokens, ~1K output |
+
+Cost per filing is then `(input + output tokens) / (tokens/sec) / 3600 × $/hour`, set against the
+frontier baseline's measured **$0.71 over 12 filings ($0.059/filing)**. Until those three exist the
+README says "estimate," and any ratio quoted — 1/20th or otherwise — is a projection.
+
+**The honest caveat that survives even after measurement:** a rented GPU billed by the hour is only
+cheap at high utilization. At 12 filings the fixed cost of standing the GPU up dominates and the
+frontier API wins outright. The break-even volume is itself a number worth computing rather than a
+detail to omit.
 
 ### Q6 — "Model selection on `eval_loss`, but you report exact-match and F1?"
 Yes — `metric_for_best_model: eval_loss` with `load_best_model_at_end`. Cross-entropy on held-out
@@ -361,14 +410,28 @@ the run is extended.
 
 ### Q7 — Reproducibility is partial
 Seeds are set (`training.seed: 42`, propagated to LoRA init) and splits are a deterministic ticker
-hash, so data assignment is stable. But `pyproject.toml` pins only lower bounds (`>=`) and there is
-no lockfile, so `configs/sft_llama31_8b.yaml`'s claim that "every run is reproducible from a commit"
-overstates it — the same commit resolves to different dependency versions over time (this already
-bit the project once via ruff, [D24](#d24--rufs-rule-set-is-pinned-explicitly)). Either commit a
-lockfile or soften the comment.
+hash, so data assignment is stable. `pyproject.toml` pins only lower bounds (`>=`), so the same commit
+resolves to different dependency versions over time — which already bit the project once through ruff
+([D24](#d24--rufs-rule-set-is-pinned-explicitly)).
 
-Related: results come from a **single seed and a single run**, so a small margin between
-configurations carries no variance estimate.
+**Half-closed as of 2026-07-29.** `requirements.lock` pins all 69 resolved packages for the base +
+`labels` + `eval` + `dev` path — the environment that produced `data/processed/*.jsonl` and runs the
+eval harness. The `train` extras are deliberately **not** locked: torch and friends are never
+installed on this machine ([D13](#d13--qlora--unsloth-on-a-rented-gpu-not-local),
+[I4](#i4--macos-purged-the-entire-project-directory)), so a lock generated here would be fabricated
+rather than resolved. It gets generated on the GPU host at training time and committed as
+`requirements-train.lock`.
+
+So the accurate claim is: **the data and eval path is reproducible from a commit; the training path is
+not yet.** That is narrower than `configs/sft_llama31_8b.yaml`'s comment, which should be softened to
+match rather than left to overstate.
+
+Two limits remain, and neither is a lockfile problem. Results come from a **single seed and a single
+run**, so a margin between configurations carries no variance estimate — the bootstrap intervals in
+[D25](#d25--every-headline-metric-carries-a-bootstrap-interval) quantify test-set sampling noise, not
+run-to-run training variance, and those are different sources of error. And the dataset depends on
+EDGAR, which is a live service: [I5](#i5--three-tickers-in-the-universe-stopped-resolving) is a
+worked example of the same ticker list resolving differently four months apart.
 
 ### Q8 — Risk-factor F1 rests on lexical overlap
 `src/eval/metrics.py:218` matches predicted to gold risks by title-weighted lexical overlap —
@@ -393,6 +456,19 @@ dataset is not encumbered.
   and supply a token, or switch to ungated `Qwen/Qwen2.5-7B-Instruct`. Must settle before renting a
   GPU.
 - **Teacher-agreement rate is unmeasured.** ~50 hand-checked examples still owed; the project claims
-  teacher labels are spot-checked and that number needs to exist.
+  teacher labels are spot-checked and that number needs to exist. The dataset is now built and
+  labeled (220/220, zero teacher failures), so this is the last thing standing between the corpus and
+  a defensible label-quality claim — and it is the one item on this list that needs a human, not a
+  GPU. What *is* checked automatically: every example with an empty gold risk list is flagged
+  `risk_factors_by_reference` (4 of 220 — USB ×3, WFC), so none is silently scored against an empty
+  target.
 - **Base-model baseline not yet run.** It is the "before" in the headline comparison and should be
   the first thing the rented GPU does.
+- **Revenue is unrecoverable for 4 of 220 filings** (Duke Energy FY2025, NextEra FY2025, Truist
+  FY2023 and FY2024). Same root cause as [I2](#i2--the-convenience-dict-was-wrong-for-34-of-182-filings):
+  utilities and banks do not tag `us-gaap:Revenues`, and for these four the convenience dict has
+  nothing either, so no warning fires. This does *not* corrupt labels — a field with no gold value is
+  `NOT_SCORED` and drops out of both numerator and denominator (`metrics.py:391`), so the effect is 4
+  fewer scorable instances, not 4 wrong ones. Worth fixing by adding sector-appropriate concepts
+  (`RevenueFromContractWithCustomerExcludingAssessedTax`, `InterestAndDividendIncomeOperating`), but
+  it is a 1.8% denominator issue, not a correctness one.

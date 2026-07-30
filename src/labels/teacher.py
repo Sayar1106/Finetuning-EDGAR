@@ -16,11 +16,72 @@ from __future__ import annotations
 
 import logging
 import time
+from dataclasses import dataclass
 from typing import Protocol
 
 from src.labels.schema import RISK_CATEGORIES, RiskFactor, RiskFactorList
 
 logger = logging.getLogger(__name__)
+
+# USD per million tokens, as published 2026-07-29. Hard-coded rather than fetched: a labeling run
+# should report what it cost without a network dependency, and a stale number that is visible in a
+# diff is safer than a silent one. Update deliberately.
+PRICING_USD_PER_MTOK: dict[str, tuple[float, float]] = {
+    # model: (input, output)
+    "claude-haiku-4-5": (1.00, 5.00),
+    "claude-sonnet-5": (3.00, 15.00),
+    "claude-opus-5": (5.00, 25.00),
+}
+
+
+@dataclass
+class TeacherUsage:
+    """Token spend for a labeling run.
+
+    Exists because the first version of this module threw `response.usage` away, which left the
+    project unable to answer "what did the dataset cost?" with anything better than a reconstruction
+    from sampled token counts. The run should report its own spend.
+    """
+
+    calls: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_read_tokens: int = 0
+    cache_creation_tokens: int = 0
+
+    def add(self, usage) -> None:
+        """Accumulate one response's `usage` block."""
+        self.calls += 1
+        self.input_tokens += getattr(usage, "input_tokens", 0) or 0
+        self.output_tokens += getattr(usage, "output_tokens", 0) or 0
+        self.cache_read_tokens += getattr(usage, "cache_read_input_tokens", 0) or 0
+        self.cache_creation_tokens += getattr(usage, "cache_creation_input_tokens", 0) or 0
+
+    def cost_usd(self, model: str) -> float | None:
+        """`None` for a model with no price on file -- better than a confidently wrong number.
+
+        Cache reads bill at ~0.1x input and cache writes at ~1.25x; both are counted here even
+        though this workload does not currently cache (the system prompt is well under the
+        1024-token minimum, so no entry is ever created).
+        """
+        price = PRICING_USD_PER_MTOK.get(model)
+        if price is None:
+            return None
+        in_rate, out_rate = price
+        billable_in = (
+            self.input_tokens
+            + self.cache_read_tokens * 0.1
+            + self.cache_creation_tokens * 1.25
+        )
+        return (billable_in * in_rate + self.output_tokens * out_rate) / 1e6
+
+    def summary(self, model: str) -> str:
+        cost = self.cost_usd(model)
+        priced = f"${cost:.2f}" if cost is not None else f"unpriced model {model!r}"
+        return (
+            f"{self.calls} calls, {self.input_tokens:,} in / {self.output_tokens:,} out tokens"
+            f" -- {priced}"
+        )
 
 TEACHER_MODEL = "claude-haiku-4-5"
 
@@ -80,6 +141,11 @@ class AnthropicTeacher:
             ) from e
         self._model = model
         self._max_retries = max_retries
+        self.usage = TeacherUsage()
+
+    @property
+    def model(self) -> str:
+        return self._model
 
     def label_risk_factors(self, risk_text: str) -> list[RiskFactor]:
         import anthropic
@@ -94,6 +160,9 @@ class AnthropicTeacher:
                     messages=[{"role": "user", "content": risk_text}],
                     output_format=RiskFactorList,
                 )
+                # Recorded before the max_tokens check: a truncated response is still billed, and a
+                # cost report that silently omits failed attempts understates the run.
+                self.usage.add(response.usage)
                 if response.stop_reason == "max_tokens":
                     # Truncated output would be a partial risk list masquerading as complete.
                     raise TeacherError("teacher response hit max_tokens; risk list is incomplete")

@@ -210,7 +210,9 @@ def run(
                 try:
                     risks = teacher.label_risk_factors(risk_text)
                     _write_cache(sections.accession_no, risk_text, risks)
-                    logger.info("  labeled %d risk factors", len(risks))
+                    # Ticker repeated on the result line: the progress line above prints when a
+                    # filing *starts*, so a bare count here reads as belonging to the next ticker.
+                    logger.info("  %s: labeled %d risk factors", sections.ticker, len(risks))
                 except TeacherUnavailableError as e:
                     # Every remaining filing would fail the same way; stop rather than grind
                     # through the list producing identical errors.
@@ -257,12 +259,20 @@ def run(
                     f.write(json.dumps(row) + "\n")
             logger.info("Wrote %d examples to %s", len(rows), out)
 
-    _report(filings, grounding, grounded_total, risk_counts, category_counts, failures)
+    _report(filings, grounding, grounded_total, risk_counts, category_counts, failures, teacher)
 
 
-def _report(filings, grounding, grounded_total, risk_counts, category_counts, failures) -> None:
+def _report(
+    filings, grounding, grounded_total, risk_counts, category_counts, failures, teacher=None
+) -> None:
     print("\n" + "=" * 62)
     print(f"Filings processed: {len(filings)}   teacher failures: {failures}")
+
+    # Only an AnthropicTeacher tracks usage; a test double or a cache-only run has none.
+    usage = getattr(teacher, "usage", None)
+    if usage is not None and usage.calls:
+        print(f"\nTeacher spend: {usage.summary(teacher.model)}")
+        print("  Cached filings cost nothing, so this covers only the calls this run made.")
 
     print("\nCompany-level splits:")
     for split, n in split_counts([f.ticker for f in filings]).items():

@@ -22,6 +22,24 @@ _Fine-tuned rows populated after training._
 stripping / strictly. Under the prose-only prompt the student trains on, the same model scores 0% —
 see [D17](docs/decisions.md#d17--two-prompt-modes-both-published).
 
+**Every headline number carries a 95% bootstrap confidence interval**, resampled over filings rather
+than field instances, because the four numeric fields within one filing are correlated. At n=12 the
+interval is wide and the point estimate alone would invite a comparison the data cannot support — see
+[D25](docs/decisions.md#d25--every-headline-metric-carries-a-bootstrap-interval).
+
+**The test split contains no filing the base model could have memorized.** All 12 test filings are
+FY2025 or FY2026, against a Llama 3.1 data cutoff of ~Dec 2023:
+
+| Split | Filings | Companies | FY ≥ 2024 |
+|---|---|---|---|
+| train | 186 | 155 | 91.4% |
+| val | 22 | 18 | 90.9% |
+| **test** | **12** | **12** | **100%** |
+
+Splits are assigned by hashing the ticker before fiscal year is known, so this is a property of the
+corpus rather than a filter chosen to flatter the result
+([Q3](docs/decisions.md#q3--how-do-you-know-the-base-model-hadnt-already-memorized-these-filings)).
+
 ## Project layout
 
 ```

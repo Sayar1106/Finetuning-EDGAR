@@ -166,6 +166,69 @@ def test_build_example_labels_are_present_in_the_input():
     assert "Competition could hurt us." in user_turn
 
 
+# --- cost accounting --------------------------------------------------------------
+
+
+class FakeUsage:
+    """The shape of `response.usage` that the accounting reads."""
+
+    def __init__(self, input_tokens=0, output_tokens=0, cache_read=0, cache_creation=0):
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+        self.cache_read_input_tokens = cache_read
+        self.cache_creation_input_tokens = cache_creation
+
+
+def test_usage_accumulates_across_calls():
+    from src.labels.teacher import TeacherUsage
+
+    usage = TeacherUsage()
+    usage.add(FakeUsage(input_tokens=2_500, output_tokens=600))
+    usage.add(FakeUsage(input_tokens=2_500, output_tokens=400))
+
+    assert usage.calls == 2
+    assert usage.input_tokens == 5_000
+    assert usage.output_tokens == 1_000
+
+
+def test_cost_uses_published_per_mtok_rates():
+    """1M input at $1 plus 1M output at $5 is $6 on Haiku 4.5."""
+    from src.labels.teacher import TeacherUsage
+
+    usage = TeacherUsage()
+    usage.add(FakeUsage(input_tokens=1_000_000, output_tokens=1_000_000))
+
+    assert usage.cost_usd("claude-haiku-4-5") == pytest.approx(6.00)
+
+
+def test_cached_tokens_are_discounted_not_charged_at_full_rate():
+    """Cache reads bill at ~0.1x input; charging them in full would overstate the run."""
+    from src.labels.teacher import TeacherUsage
+
+    usage = TeacherUsage()
+    usage.add(FakeUsage(cache_read=1_000_000))
+
+    assert usage.cost_usd("claude-haiku-4-5") == pytest.approx(0.10)
+
+
+def test_unpriced_model_reports_none_rather_than_a_wrong_number():
+    """A missing price must not silently become $0.00 -- that reads as 'this run was free'."""
+    from src.labels.teacher import TeacherUsage
+
+    usage = TeacherUsage()
+    usage.add(FakeUsage(input_tokens=1_000, output_tokens=1_000))
+
+    assert usage.cost_usd("some-unreleased-model") is None
+    assert "unpriced" in usage.summary("some-unreleased-model")
+
+
+def test_usage_with_no_calls_reports_no_spend():
+    from src.labels.teacher import TeacherUsage
+
+    assert TeacherUsage().calls == 0
+    assert TeacherUsage().cost_usd("claude-haiku-4-5") == pytest.approx(0.0)
+
+
 # --- failure handling -------------------------------------------------------------
 
 

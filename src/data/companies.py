@@ -47,7 +47,7 @@ TICKERS: list[str] = [
 #
 #   - rename: the company still files, under a new symbol (MMC -> MRSH)
 #   - acquisition: the company is delisted and has no ticker at all, but its historical filings
-#     remain valid (ANSS, acquired by Synopsys; last 10-K is FY2024)
+#     remain valid (ANSS, NVEE)
 #
 # A CIK is permanent through both, so pin the lookup to it rather than chasing symbols. Each CIK
 # below was resolved by company name against SEC's map and confirmed to have 10-K filings -- not
@@ -60,4 +60,5 @@ TICKERS: list[str] = [
 CIK_OVERRIDES: dict[str, int] = {
     "MMC": 62709,  # MARSH & MCLENNAN COMPANIES, INC. -- now trades as MRSH
     "ANSS": 1013462,  # ANSYS INC -- delisted after the Synopsys acquisition; final 10-K is FY2024
+    "NVEE": 1532961,  # NV5 Global, Inc. -- delisted after the Acuity acquisition; final 10-K FY2024
 }

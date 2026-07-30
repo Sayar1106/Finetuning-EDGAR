@@ -1,0 +1,83 @@
+# Locked dependency versions for the data, labeling, and eval path.
+#
+# Scope: base dependencies plus the `labels`, `eval`, and `dev` extras -- the exact environment
+# that produced data/processed/*.jsonl and runs the eval harness. It deliberately does NOT cover
+# the `train` extras (torch, transformers, trl, peft, bitsandbytes, unsloth, accelerate): those are
+# never installed on this machine (see D13 and I4 -- the local disk cannot hold them), so a lock
+# generated here would be a guess. Lock those on the GPU host at training time and commit the
+# result as requirements-train.lock.
+#
+# Why this file exists: pyproject.toml pins only lower bounds (`>=`), so the same commit resolves
+# to different versions over time. That already bit the project once through ruff (see D24).
+#
+# Regenerate with:  .venv/bin/python -m pip freeze --exclude-editable > requirements.lock
+# Generated 2026-07-29 on Python 3.10.8 (darwin/arm64).
+aiofiles==25.1.0
+annotated-types==0.8.0
+anthropic==0.120.0
+anyio==4.14.2
+attrs==26.1.0
+beautifulsoup4==4.15.0
+certifi==2026.7.22
+charset-normalizer==3.4.9
+distro==1.9.0
+docstring_parser==0.18.0
+edgartools==5.43.0
+exceptiongroup==1.3.1
+filelock==3.32.0
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+httpxthrottlecache==0.3.5
+humanize==4.16.0
+idna==3.18
+iniconfig==2.3.0
+Jinja2==3.1.6
+jiter==0.16.0
+joblib==1.5.3
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+lxml==6.1.1
+markdown-it-py==4.2.0
+MarkupSafe==3.0.3
+mdurl==0.1.2
+nest-asyncio==1.6.0
+numpy==2.2.6
+orjson==3.11.9
+packaging==26.2
+pandas==2.3.3
+pluggy==1.6.0
+pyarrow==25.0.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+Pygments==2.20.0
+pyrate-limiter==4.4.0
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
+pytz==2026.3.post1
+rank-bm25==0.2.2
+RapidFuzz==3.14.5
+referencing==0.37.0
+requests==2.34.2
+rich==15.0.0
+rpds-py==0.30.0
+ruff==0.16.0
+scikit-learn==1.7.2
+scipy==1.15.3
+six==1.17.0
+sniffio==1.3.1
+soupsieve==2.9.1
+stamina==26.1.0
+tabulate==0.10.0
+tenacity==9.1.4
+textdistance==4.6.3
+threadpoolctl==3.6.0
+tomli==2.4.1
+tqdm==4.69.1
+truststore==0.10.4
+typing-inspection==0.4.2
+typing_extensions==4.16.0
+tzdata==2026.3
+Unidecode==1.4.0
+urllib3==2.7.0
