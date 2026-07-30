@@ -40,3 +40,24 @@ TICKERS: list[str] = [
     "MASI", "CHE", "FN", "ONTO", "MKTX", "SSD", "EXPO", "UFPI", "LSTR", "MEDP",
     "CACC", "WING", "CVLT", "POWI", "ENSG", "CWST", "NVEE", "SITE", "RGLD", "TREX",
 ]
+
+# EDGAR's ticker->CIK map (https://www.sec.gov/files/company_tickers.json) lists only a company's
+# *current* ticker, so a symbol that stops being current is simply absent and `Company(ticker)`
+# raises "Company not found". Two ways that happens, both seen in this universe:
+#
+#   - rename: the company still files, under a new symbol (MMC -> MRSH)
+#   - acquisition: the company is delisted and has no ticker at all, but its historical filings
+#     remain valid (ANSS, acquired by Synopsys; last 10-K is FY2024)
+#
+# A CIK is permanent through both, so pin the lookup to it rather than chasing symbols. Each CIK
+# below was resolved by company name against SEC's map and confirmed to have 10-K filings -- not
+# recalled from memory. A fuzzy ticker match is how you end up ingesting Mag Mile Capital ('MMCP',
+# edgartools' suggestion for MMC) and calling it Marsh & McLennan.
+#
+# The keys stay the original tickers deliberately. src/labels/splits.py assigns companies to
+# train/val/test by hashing the ticker, so renaming a key would move that company to a different
+# split and invalidate comparisons against every earlier run.
+CIK_OVERRIDES: dict[str, int] = {
+    "MMC": 62709,  # MARSH & MCLENNAN COMPANIES, INC. -- now trades as MRSH
+    "ANSS": 1013462,  # ANSYS INC -- delisted after the Synopsys acquisition; final 10-K is FY2024
+}

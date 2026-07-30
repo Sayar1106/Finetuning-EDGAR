@@ -41,7 +41,7 @@ docs/       # design notes, deferred ideas
 
 ```bash
 pip install -e ".[dev]"
-cp .env.example .env   # fill in EDGAR_IDENTITY, OPENAI_API_KEY, WANDB_API_KEY, HF_TOKEN
+cp .env.example .env   # fill in EDGAR_IDENTITY, ANTHROPIC_API_KEY, WANDB_API_KEY, HF_TOKEN
 ```
 
 See extras in `pyproject.toml` for stage-specific dependencies (`labels`, `train`, `eval`, `demo`).

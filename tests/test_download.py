@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.data.download import parse_filing
+from src.data.companies import CIK_OVERRIDES, TICKERS
+from src.data.download import get_latest_10ks, parse_filing
 from src.data.schema import FinancialFacts
 
 
@@ -193,6 +194,60 @@ def test_parse_filing_derives_eps_when_concept_missing():
 
     assert sections.financials.eps_diluted == pytest.approx(2.5)
     assert "eps_diluted_derived_from_net_income_and_shares" in sections.parse_warnings
+
+
+# --------------------------------------------------------------------------- ticker resolution
+
+
+class FakeFilingsList:
+    def __init__(self, filings):
+        self._filings = filings
+
+    def latest(self, n):
+        return self._filings[:n]
+
+
+def _record_lookups(monkeypatch) -> list:
+    """Patches edgar.Company to capture whatever identifier get_latest_10ks resolved to."""
+    import edgar
+
+    seen: list = []
+
+    class FakeCompany:
+        def __init__(self, cik_or_ticker):
+            seen.append(cik_or_ticker)
+
+        def get_filings(self, form, amendments):
+            return FakeFilingsList([FakeFiling(None, None)])
+
+    monkeypatch.setattr(edgar, "Company", FakeCompany)
+    return seen
+
+
+def test_a_renamed_ticker_is_resolved_by_cik(monkeypatch):
+    """MMC is unresolvable: EDGAR's map holds only the current symbol, and Marsh & McLennan moved
+    to MRSH. The CIK survives the rename, so the lookup goes through the number."""
+    seen = _record_lookups(monkeypatch)
+
+    get_latest_10ks("MMC")
+
+    assert seen == [62709]
+
+
+def test_an_ordinary_ticker_is_resolved_by_symbol(monkeypatch):
+    seen = _record_lookups(monkeypatch)
+
+    get_latest_10ks("AAPL")
+
+    assert seen == ["AAPL"]
+
+
+def test_every_cik_override_names_a_company_in_the_universe():
+    """An override for a ticker no longer in TICKERS is dead weight that outlives the reason for
+    it; one whose CIK is a string would be passed to edgartools as a ticker and fail obscurely."""
+    for ticker, cik in CIK_OVERRIDES.items():
+        assert ticker in TICKERS, f"{ticker} has a CIK override but is not in the universe"
+        assert isinstance(cik, int), f"{ticker} override must be an int CIK, got {type(cik)}"
 
 
 def test_financial_facts_defaults_are_none():

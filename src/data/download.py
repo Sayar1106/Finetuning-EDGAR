@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import time
 
+from src.data.companies import CIK_OVERRIDES
 from src.data.schema import FilingSections
 from src.data.statements import extract_statements
 from src.data.xbrl_facts import extract_financial_facts
@@ -58,11 +59,15 @@ def _with_retry(fn, *, retries: int = 3, base_delay: float = 1.5, desc: str = "r
 
 
 def get_latest_10ks(ticker: str, n: int = 1):
-    """Returns up to `n` most recent 10-K Filing objects for `ticker`, newest first."""
+    """Returns up to `n` most recent 10-K Filing objects for `ticker`, newest first.
+
+    Tickers listed in `CIK_OVERRIDES` are resolved by CIK instead, since EDGAR's map knows only a
+    company's current symbol -- a rename or a delisting leaves the old one unresolvable.
+    """
     import edgar
 
     def _fetch():
-        company = edgar.Company(ticker)
+        company = edgar.Company(CIK_OVERRIDES.get(ticker, ticker))
         # `amendments=False` excludes 10-K/A. An amendment restates only the items it revises --
         # AMD's most recent one carries just Items 7 and 15 -- so treating it as the annual report
         # yields a filing with no risk factors and no statements, which looks like a parse failure

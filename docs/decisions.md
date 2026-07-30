@@ -252,6 +252,40 @@ Git history is flattened into one restore commit — the per-day commit trail is
 **Prevention.** Local venv stays lean, no model weights on this machine, `df -h /System/Volumes/Data`
 before any large download. Repo now pushed to GitHub.
 
+### I5 — Two tickers in the universe stopped resolving
+**2026-07-29.** The re-ingestion logged `Company not found` for `MMC` and `ANSS`. Not a bug in the
+fetcher: EDGAR's `company_tickers.json` lists only a company's *current* symbol, so a symbol that
+stops being current is simply absent. The two failures have different causes, which matters because
+only one of them means the company is still filing:
+
+| Ticker | Cause | Still files? | Latest 10-K |
+|---|---|---|---|
+| `MMC` | renamed — Marsh & McLennan now trades as **MRSH** | yes | FY2025 |
+| `ANSS` | acquired by Synopsys, delisted, `tickers: []` in EDGAR | no | FY2024 (final) |
+
+`ANSS` is kept rather than dropped: a delisted company's historical 10-K is still a real filing with
+real XBRL, so it is valid training data. FY2024 is also still past the ~Dec-2023 pretraining cutoff
+([Q3](#q3--how-do-you-know-the-base-model-hadnt-already-memorized-these-filings)).
+
+**Fix.** `CIK_OVERRIDES` in `src/data/companies.py` pins each to its CIK (`62709`, `1013462`) and
+`get_latest_10ks` prefers it over the symbol. A CIK is permanent through both a rename and a
+delisting; a ticker is not. Both CIKs were resolved by company name against SEC's map and confirmed
+to have 10-K filings, not recalled from memory. Verified live — `MMC_0000062709-26-000022.json`
+(FY2025) and `ANSS_0001013462-25-000009.json` (FY2024), all four numeric fields present, no parse
+warnings on either.
+
+edgartools' own suggestion for `MMC` was `MMCP` (Mag Mile Capital), an unrelated microcap. Accepting
+a fuzzy ticker match would have ingested the wrong company's 10-K and scored a model against it.
+
+**The key stays `MMC`, not `MRSH`.** `src/labels/splits.py` assigns companies to train/val/test by
+hashing the ticker, so renaming the key would move this company to a different split and invalidate
+comparisons against every earlier run. A test asserts each override names a ticker still in `TICKERS`
+and carries an `int` CIK — a string would be passed through as a ticker and fail the same obscure way.
+
+*Generalization declined:* no automatic name-search fallback on `CompanyNotFoundError`. That is
+exactly the mechanism that would have picked `MMCP`. Renames are rare enough to pin explicitly and
+review in a diff.
+
 ---
 
 ## Anticipated questions
