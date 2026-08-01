@@ -1,0 +1,9 @@
+{
+  "seed": 0,
+  "n_filings": 12,
+  "per_filing": 4,
+  "test_filings": 3,
+  "population_filings": 216,
+  "population_risks": 2834,
+  "sampled_risks": 60
+}

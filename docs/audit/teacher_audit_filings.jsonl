@@ -1,0 +1,15 @@
+{"accession_no": "0000014272-25-000039", "ticker": "BMY", "split": "train", "stratum": "random", "risk_digest": "2a4ebdc378b6", "n_teacher_risks": 8, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0000318154-26-000010", "ticker": "AMGN", "split": "train", "stratum": "random", "risk_digest": "9ad203cf2b0f", "n_teacher_risks": 24, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0000731766-24-000081", "ticker": "UNH", "split": "train", "stratum": "random", "risk_digest": "49f45862311a", "n_teacher_risks": 7, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0000875320-26-000056", "ticker": "VRTX", "split": "train", "stratum": "random", "risk_digest": "329afe55441c", "n_teacher_risks": 7, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0000895421-26-000086", "ticker": "MS", "split": "train", "stratum": "random", "risk_digest": "02855cbe02fe", "n_teacher_risks": 12, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0000915912-26-000004", "ticker": "AVB", "split": "train", "stratum": "random", "risk_digest": "331432255d3a", "n_teacher_risks": 14, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001075531-26-000009", "ticker": "BKNG", "split": "train", "stratum": "random", "risk_digest": "affa819cef46", "n_teacher_risks": 8, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001099219-24-000035", "ticker": "MET", "split": "val", "stratum": "random", "risk_digest": "0a024ebbcd33", "n_teacher_risks": 8, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001104659-26-013549", "ticker": "APH", "split": "train", "stratum": "random", "risk_digest": "1028fbf19035", "n_teacher_risks": 4, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001628280-26-007696", "ticker": "PSA", "split": "train", "stratum": "random", "risk_digest": "69d7573c1703", "n_teacher_risks": 11, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001628280-26-010047", "ticker": "KO", "split": "train", "stratum": "random", "risk_digest": "3a62ab9e2abb", "n_teacher_risks": 7, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001730168-25-000121", "ticker": "AVGO", "split": "train", "stratum": "random", "risk_digest": "4381e642d003", "n_teacher_risks": 35, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0000707549-25-000075", "ticker": "LRCX", "split": "test", "stratum": "test", "risk_digest": "0d1452f6dcb6", "n_teacher_risks": 7, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001104659-26-032325", "ticker": "DG", "split": "test", "stratum": "test", "risk_digest": "f0cf7dcb5aeb", "n_teacher_risks": 7, "n_sampled": 4, "missed_risks": null, "note": ""}
+{"accession_no": "0001628280-26-033617", "ticker": "EA", "split": "test", "stratum": "test", "risk_digest": "6b85116d44e5", "n_teacher_risks": 8, "n_sampled": 4, "missed_risks": null, "note": ""}

@@ -6,7 +6,9 @@ as validated JSON.
 
 Numeric ground truth comes from SEC's **XBRL companyfacts API**, so the hardest labels (financial
 figures) are free and exact rather than teacher-model generated. Qualitative fields (risk-factor
-categories/summaries) are teacher-LLM labeled and spot-checked by hand.
+categories/summaries) are teacher-LLM labeled, and audited against a blind human sample —
+`python -m src.labels.audit` draws the sheet, collects verdicts, and reports agreement with
+filing-clustered intervals. _Verdicts pending; the rates below carry no audit number yet._
 
 ## Results
 
@@ -67,7 +69,8 @@ See extras in `pyproject.toml` for stage-specific dependencies (`labels`, `train
 ## Pipeline
 
 1. `src/data/` — download and parse 10-K filings for ~200 companies.
-2. `src/labels/` — build the labeled extraction dataset (XBRL + teacher LLM), company-level splits.
+2. `src/labels/` — build the labeled extraction dataset (XBRL + teacher LLM), company-level splits,
+   and audit the teacher's labels by hand (`src/labels/audit.py`, worksheet in `docs/audit/`).
 3. `src/eval/` — extraction metrics and baseline runs.
 4. `src/train/` — QLoRA fine-tuning on a rented GPU.
 5. `app/` — Gradio demo; model + model card published to Hugging Face Hub.

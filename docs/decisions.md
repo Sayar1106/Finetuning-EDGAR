@@ -185,6 +185,50 @@ satisfies Item 1A by cross-reference is undefined, and `0.0 [0, 0]` would read a
 bound is 100% and the interval is one-sided in effect. Fine for the comparison being made; worth
 naming rather than presenting the interval as symmetric.
 
+### D26 — Teacher labels are audited by a blind human sample, not eyeballed
+Every risk-factor number this project reports is scored against gold labels Claude Haiku wrote, so
+each of them is conditional on the teacher being right. `src/labels/audit.py` measures that
+conditional instead of asserting it: `sample` draws a review sheet, `review` collects verdicts, and
+`score` reports agreement with intervals. The worksheet is checked in at `docs/audit/` — a
+"spot-checked by hand" claim with no worksheet behind it is the thing the module exists to replace.
+
+**Three verdicts per risk, not one**, because they fail differently and the fixes differ:
+*grounded* (is the risk actually in the text the teacher was given?) catches hallucinated labels,
+the failure that makes training data actively harmful rather than merely noisy; *category* is the
+headline, because `category_f1` and `category_accuracy` are what the eval scores; *summary* catches
+faithful-but-boilerplate prose that would fit any registrant.
+
+**The reviewer picks the category before seeing the teacher's.** Showing a label and asking "do you
+agree?" measures agreement with an anchor — a plausible-looking answer gets accepted that the
+reviewer would never have produced unprompted. `review` withholds the teacher's category until the
+human commits, then compares programmatically. Only the category verdict can be blinded this way,
+which is a further reason it is the headline rather than the grounding rate.
+
+**The sample is clustered, and so is the interval.** A uniform draw of 50 risks would land in ~50
+distinct filings, each demanding its own read of Item 1A. So `sample` draws filings first (12), then
+risks within them (4 each) — ~48 items from 12 readings. That makes the items non-independent, so
+`score` resamples *filings* in the bootstrap, the same unit as [D25](#d25--every-headline-metric-carries-a-bootstrap-interval).
+Below 3 reviewed filings the interval is withheld entirely: a one-cluster bootstrap redraws the same
+filing every time and prints `[100.0%, 100.0%]` off four items, which is worse than no interval.
+
+**Two strata, scored separately and never pooled.** The `random` stratum is uniform over the corpus,
+so it estimates label quality across the dataset. But the test split is 12 of 216 filings, so a
+12-filing uniform draw is expected to contain fewer than one — and the first draw contained zero.
+Test gold labels are what every reported risk-factor number is scored against, so a `test` stratum
+(3 filings) oversamples them deliberately. Pooling the two would bias the corpus estimate toward
+whatever the test split happens to look like.
+
+Two things the audit deliberately does *not* cover. Numeric labels are not audited: they come from
+XBRL, are exact by construction, and are already checked against the excerpt by `check_grounding`.
+And the missed-risk count yields an **upper bound** on recall, not a measurement — a human reading
+Item 1A once catches omissions the teacher made loudly, not every risk buried in a subordinate
+clause.
+
+Verdicts are pinned to a digest of the labels they judged. Rebuilding the dataset changes the
+sentence at a given index, and silently re-pointing an old verdict at a new label would turn the
+worksheet into fiction; `score` excludes stale rows and says how many. Same reasoning as the teacher
+cache key in [D23](#d23--teacher-labels-are-cached-per-filing).
+
 ---
 
 ## Incident log
@@ -455,13 +499,15 @@ dataset is not encumbered.
 - **Llama 3.1 8B is gated** and `HF_TOKEN` is empty (401 on both repos). Either accept the license
   and supply a token, or switch to ungated `Qwen/Qwen2.5-7B-Instruct`. Must settle before renting a
   GPU.
-- **Teacher-agreement rate is unmeasured.** ~50 hand-checked examples still owed; the project claims
-  teacher labels are spot-checked and that number needs to exist. The dataset is now built and
-  labeled (220/220, zero teacher failures), so this is the last thing standing between the corpus and
-  a defensible label-quality claim — and it is the one item on this list that needs a human, not a
-  GPU. What *is* checked automatically: every example with an empty gold risk list is flagged
-  `risk_factors_by_reference` (4 of 220 — USB ×3, WFC), so none is silently scored against an empty
-  target.
+- **Teacher-agreement rate: harness built, verdicts still owed.** The measurement instrument now
+  exists ([D26](#d26--teacher-labels-are-audited-by-a-blind-human-sample-not-eyeballed)) and the
+  sheet is drawn — 60 risks across 15 filings (12 random + 3 test), seed 0, in `docs/audit/`. What
+  is missing is the reading: `python -m src.labels.audit review`, roughly 3–4 hours, resumable, and
+  the one item on this list that needs a human rather than a GPU. Until those verdicts exist, every
+  risk-factor number in the README is conditional on an untested assumption, and the "spot-checked
+  by hand" claim is unsupported. What *is* checked automatically: every example with an empty gold
+  risk list is flagged `risk_factors_by_reference` (4 of 220 — USB ×3, WFC), so none is silently
+  scored against an empty target.
 - **Base-model baseline not yet run.** It is the "before" in the headline comparison and should be
   the first thing the rented GPU does.
 - **Revenue is unrecoverable for 4 of 220 filings** (Duke Energy FY2025, NextEra FY2025, Truist
