@@ -229,6 +229,25 @@ sentence at a given index, and silently re-pointing an old verdict at a new labe
 worksheet into fiction; `score` excludes stale rows and says how many. Same reasoning as the teacher
 cache key in [D23](#d23--teacher-labels-are-cached-per-filing).
 
+### D27 — The published baseline is the run whose artifact is checked in
+The frontier baseline was re-run on 2026-08-02 because its artifacts no longer existed: the numbers
+in the README had been carried forward in prose while `data/eval/reports/` and the prediction cache
+were gone, lost with [I4](#i4--macos-purged-the-entire-project-directory). A headline number that
+cannot be traced to a file is an assertion, which is the same failure
+[D26](#d26--teacher-labels-are-audited-by-a-blind-human-sample-not-eyeballed) exists to fix on the
+labeling side.
+
+The re-run superseded the earlier figures rather than being averaged with them, and the report JSON
+is committed alongside. `.gitignore` already encodes this split — cached predictions are regenerable
+and ignored, reports are results and are kept — so the rule is now uniform: **the published number is
+whichever run left an artifact in the repo.** Averaging two runs would have produced a number no file
+contains and no command reproduces.
+
+That the figures moved at all is the finding, not a nuisance: it is a measurement of inference
+variance the project previously had no evidence for, and it sets a floor on what margin can be
+claimed later ([Q7](#q7--reproducibility-is-partial)). The cost figure moved too, and that one is
+still unexplained — see Q5.
+
 ---
 
 ## Incident log
@@ -358,9 +377,17 @@ carries a 95% percentile-bootstrap interval, and the eval report prints them nex
 estimate.
 
 The size of them is the thing to internalize: 12 held-out companies × 4 scored numeric fields ≈ 48
-comparisons, and at ~95.8% accuracy the interval runs roughly **[87.5%, 100%]**. A
+comparisons, so one field is 2.1 points and one filing is 8.3 points of schema-validity. The
+measured baseline sits at 97.9% numeric accuracy with an interval of **[93.8%, 100%]**. A
 fine-tuned-vs-baseline gap smaller than ~10 points on numerics is not distinguishable from sampling
 noise at this test-set size. Close results are ties, and the table now says so.
+
+Two independent reasons back that, and they compound. Sampling noise is what the bootstrap
+estimates; on top of it sits generation noise, since the frontier baseline has no seed to pin and
+re-running the same commit moved every headline figure
+([Q7](#q7--reproducibility-is-partial)). An interval on a single run understates the spread of the
+thing a reader actually cares about — where the number would land if the whole evaluation were
+repeated.
 
 The test set is 12 companies because splits are company-level over a 185-ticker universe
 ([D5](#d5--split-by-company-never-by-filing)); widening it means growing the universe, not
@@ -437,8 +464,16 @@ The comparison needs three numbers, none of which exist yet:
 | Tokens per filing: input + output at inference | Already known — ~24.7 KB excerpt ≈ 6.2K input tokens, ~1K output |
 
 Cost per filing is then `(input + output tokens) / (tokens/sec) / 3600 × $/hour`, set against the
-frontier baseline's measured **$0.71 over 12 filings ($0.059/filing)**. Until those three exist the
+frontier baseline's measured **$0.34 over 12 filings ($0.028/filing)** — the 2026-08-02 run,
+104,311 input / 13,193 output tokens at the checked-in $2/$10 per Mtok. Until those three exist the
 README says "estimate," and any ratio quoted — 1/20th or otherwise — is a projection.
+
+This figure was previously recorded as $0.71 ($0.059/filing). The re-run halved it against the same
+price table, so the earlier number reflects roughly twice the tokens — most likely both prompt modes
+summed rather than the schema run alone ([D17](#d17--two-prompt-modes-both-published)). That is a
+hypothesis, not a finding: the original run's artifacts were lost and the `trained`-mode run has not
+been repeated to confirm it. **The ratio this section builds on doubles if the hypothesis is wrong,
+so the cheaper baseline is the conservative one to quote against a GPU.**
 
 **The honest caveat that survives even after measurement:** a rented GPU billed by the hour is only
 cheap at high utilization. At 12 filings the fixed cost of standing the GPU up dominates and the
@@ -456,7 +491,7 @@ the run is extended.
 Seeds are set (`training.seed: 42`, propagated to LoRA init) and splits are a deterministic ticker
 hash, so data assignment is stable. `pyproject.toml` pins only lower bounds (`>=`), so the same commit
 resolves to different dependency versions over time — which already bit the project once through ruff
-([D24](#d24--rufs-rule-set-is-pinned-explicitly)).
+([D24](#d24--ruffs-rule-set-is-pinned-explicitly)).
 
 **Half-closed as of 2026-07-29.** `requirements.lock` pins all 69 resolved packages for the base +
 `labels` + `eval` + `dev` path — the environment that produced `data/processed/*.jsonl` and runs the
@@ -476,6 +511,18 @@ run**, so a margin between configurations carries no variance estimate — the b
 run-to-run training variance, and those are different sources of error. And the dataset depends on
 EDGAR, which is a live service: [I5](#i5--three-tickers-in-the-universe-stopped-resolving) is a
 worked example of the same ticker list resolving differently four months apart.
+
+**The frontier baseline is not reproducible run-to-run, and now there is evidence rather than a
+caveat.** `src/eval/predict.py` sets no `temperature` — current models reject a non-default value —
+so there is no seed to pin on the API side. Re-running the identical commit on 2026-08-02 moved
+every headline figure: strict schema-validity 25% → 33.3%, numeric accuracy 95.8% → 97.9%, risk
+category F1 76.7% → 79.2%. Each gap is one unit of the underlying count (one filing of twelve, one
+field of forty-eight), and every superseded value falls inside the new run's interval. Two readings
+follow, and both matter. The reassuring one: the bootstrap intervals of
+[D25](#d25--every-headline-metric-carries-a-bootstrap-interval) are wide enough to cover the noise
+they were built to represent. The disciplining one: at n=12 a single filing is 8.3 percentage points
+of schema-validity, so **any fine-tuned-vs-frontier margin narrower than one filing is not a result**,
+regardless of which side it favours. The published numbers are one draw, not the model's true score.
 
 ### Q8 — Risk-factor F1 rests on lexical overlap
 `src/eval/metrics.py:218` matches predicted to gold risks by title-weighted lexical overlap —

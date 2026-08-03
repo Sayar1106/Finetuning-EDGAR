@@ -18,11 +18,17 @@ _Fine-tuned rows populated after training._
 |-----------------------------|:---:|:---:|:---:|
 | Llama 3.1 8B (base, few-shot) | — | — | — |
 | Llama 3.1 8B (fine-tuned)     | — | — | — |
-| Sonnet 5 (zero-shot, schema prompt) | 100 / 25 strict | 95.8 | 76.7 |
+| Sonnet 5 (zero-shot, schema prompt) | 100 / 33.3 strict | 97.9 | 79.2 |
 
-12 held-out companies, unconstrained decoding, $0.71. Schema-valid is reported after fence
+12 held-out companies, unconstrained decoding, $0.34. Run 2026-08-02; the full report is checked in
+at `data/eval/reports/claude-sonnet-5_schema_test.json`. Schema-valid is reported after fence
 stripping / strictly. Under the prose-only prompt the student trains on, the same model scores 0% —
 see [D17](docs/decisions.md#d17--two-prompt-modes-both-published).
+
+These figures move between runs: the API rejects a non-default `temperature`, so there is no seed to
+pin. An earlier run of the same commit scored 25 / 95.8 / 76.7 — every one of those inside the
+intervals below, and each gap is a single filing or a single field
+([Q7](docs/decisions.md#q7--reproducibility-is-partial)).
 
 **Every headline number carries a 95% bootstrap confidence interval**, resampled over filings rather
 than field instances, because the four numeric fields within one filing are correlated. At n=12 the
