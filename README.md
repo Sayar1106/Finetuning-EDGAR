@@ -81,6 +81,9 @@ See extras in `pyproject.toml` for stage-specific dependencies (`labels`, `train
 4. `src/train/` — QLoRA fine-tuning on a rented GPU.
 5. `app/` — Gradio demo; model + model card published to Hugging Face Hub.
 
+Module-level data flow, caches, and where each artifact comes from:
+[`docs/architecture.md`](docs/architecture.md).
+
 Full plan and rationale: see the project plan.
 
 ## Design decisions
