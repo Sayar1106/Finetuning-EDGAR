@@ -65,6 +65,20 @@ A four-way split with a 38% mode is not a boundary the reviewer can be expected 
 the cases that need an *authored* rule rather than a documented one, and they are the strongest
 argument for glossing the taxonomy before any future labeling run.
 
+## The flagging criterion
+
+A risk is marked `UNINFORMATIVE` in the audit sheet — excluded when the agreement rate is reported —
+when a no-rule theme is **the risk's primary subject**, not merely a driver it cites. The
+distinction matters because most risks name a macro condition somewhere in their summary, and
+flagging on any mention would exclude rows whose category was never in doubt.
+
+| | Flag? | Why |
+|---|---|---|
+| "Economic Downturn Impacts Revenue and Investment Returns" | yes | the downturn *is* the risk |
+| "Government Debt and Political Instability Risks" | yes | political instability *is* the risk |
+| "Fixed Income Security Defaults and Impairments" | no | a credit risk; the downturn is a driver, and `financial` is unambiguous |
+| "Factors affecting medical cost exceeding forecasts" | no | pandemic is one driver among inflation, utilization and climate |
+
 ## Using this during the audit
 
 The first 20 risks (BMY, AMGN, UNH, VRTX, MS) were reviewed without these definitions. The remaining
