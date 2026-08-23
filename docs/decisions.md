@@ -277,6 +277,13 @@ reviewer reading "cyber" in its plain sense — anything about information syste
 the teacher while both parties are being reasonable. The disagreement measures an undefined
 taxonomy, not a wrong teacher.
 
+The glosses recoverable from usage are written down in [`taxonomy.md`](taxonomy.md), along with the
+three themes where they are **not** recoverable: pandemic/health crisis splits four ways across
+`operational`/`market`/`supply_chain`/`macroeconomic` with a 38% mode, tariffs the same at 38%, and
+geopolitical conflict at 43%. Those are not boundaries a reviewer could guess, and a human/teacher
+disagreement on them carries no information — the audit flags them rather than scoring either answer
+as correct. They are also the cases that need an authored rule rather than a documented one.
+
 **Consequence.** The headline agreement rate is partly a measure of prompt underspecification. A
 one-line gloss per category would likely absorb most of these disagreements, but changing the prompt
 invalidates the existing labels for all 220 filings and re-pays the teacher run, so it is not being
