@@ -248,6 +248,41 @@ variance the project previously had no evidence for, and it sets a floor on what
 claimed later ([Q7](#q7--reproducibility-is-partial)). The cost figure moved too, and that one is
 still unexplained — see Q5.
 
+### D28 — The taxonomy ships to the teacher undefined, and the audit found it
+[D4](#d4--closed-risk-factor-taxonomy) argues for a closed category set because it makes risk
+categorization scoreable as multi-label F1 rather than fuzzy string matching. That argument holds.
+What it never did was say what the twelve categories *mean*. `SYSTEM_PROMPT` in
+`src/labels/teacher.py` interpolates the bare tuple — "Use only these categories: market,
+operational, regulatory, …" — with no gloss, no examples, and a single tie-break: choose the
+category the filing emphasizes most. `src/labels/schema.py` is the same twelve strings.
+
+So the teacher was never given a definition; it invented boundaries from the label names, and the
+hand audit ([D26](#d26--teacher-labels-are-audited-by-a-blind-human-sample-not-eyeballed)) is what
+surfaced them. Of the first 20 reviewed risks, 6 category disagreements were **all** adjacent-label
+boundary calls — `legal`/`regulatory`, `regulatory`/`operational`, `supply_chain`/`operational`,
+`competitive`/`operational`, `cyber`/`operational`, `competitive`/`market` — and none was a
+substantive misreading of the risk. `operational` is one side of four of the six.
+
+The `cyber` boundary is the clearest case, because the teacher's implicit rule is recoverable from
+usage. Across the 2,834 labeled risks, `cyber` is 108 of them, and it tracks **adversary versus no
+adversary**: breach, attack, unauthorized access and data privacy are `cyber`; reliability, outage,
+internal control and integration failure are `operational`. Of 63 risks mentioning information
+systems or data integrity, 40 are `cyber` and 19 `operational`, split along that line. UnitedHealth's
+filing shows the teacher applying it deliberately — "Data integrity and information systems
+reliability" is `operational`, while "Cyber-attacks and data security breaches" in the same filing is
+`cyber`.
+
+That rule is defensible and internally consistent. It is also nowhere in the prompt, so a human
+reviewer reading "cyber" in its plain sense — anything about information systems — disagrees with
+the teacher while both parties are being reasonable. The disagreement measures an undefined
+taxonomy, not a wrong teacher.
+
+**Consequence.** The headline agreement rate is partly a measure of prompt underspecification. A
+one-line gloss per category would likely absorb most of these disagreements, but changing the prompt
+invalidates the existing labels for all 220 filings and re-pays the teacher run, so it is not being
+done inside v1. What is done instead: the audit records the boundary pairs, and the reported
+agreement rate is qualified by them rather than presented as a clean measure of teacher correctness.
+
 ---
 
 ## Incident log
