@@ -290,6 +290,58 @@ invalidates the existing labels for all 220 filings and re-pays the teacher run,
 done inside v1. What is done instead: the audit records the boundary pairs, and the reported
 agreement rate is qualified by them rather than presented as a clean measure of teacher correctness.
 
+### D29 — The audit reports blind agreement, not the recorded rate
+The audit is complete: 60 of 60 sampled risks reviewed across 15 filings. `score` reports **89.6%**
+category agreement on the random stratum (95% CI [79.2%, 97.9%], 12 filings) and **66.7%** on the
+test stratum (95% CI [25.0%, 100.0%], 3 filings). Grounding and summary faithfulness are 100% in
+both. Those are the numbers the tool prints, and they are not the numbers this project publishes.
+
+**Eight of the agreements were manufactured after the fact.** `review` withholds the teacher's
+category until the human commits, which makes each verdict blind. But it prints `DIFFERS` immediately
+afterward, and on eight risks the reviewer re-read the text and changed their answer to match. Every
+such edit is recorded in the row's `note` with the original verdict preserved, so both rates stay
+computable:
+
+| Slice | n | Recorded | Blind |
+|---|---:|---:|---:|
+| All scorable | 58 | 50/58 (86%) | 42/58 (**72%**) |
+| random stratum | 46 | 42/46 (91%) | 35/46 (**76%**) |
+| test stratum | 12 | 8/12 (67%) | 7/12 (**58%**) |
+
+The 14-point spread is not a reviewer failing; it is the predictable shape of revising under
+feedback. The revision is **one-directional** — a verdict that happened to agree with the teacher is
+never re-examined, because nothing prompts a second look. So errors that coincide with the teacher
+survive and errors that diverge get corrected, and the recorded rate is inflated by construction.
+Several of the eight had genuine substance (PSA #7 turned on the word "liability" in the title; DG #4
+on a data-security clause the first read missed), which is exactly why the effect is hard to see from
+the inside: each individual revision looks like a correction. **The blind rate is the one that
+answers D26's question**, and it is what the README will carry, with the recorded rate alongside it
+as the measure of how much seeing the answer moved the reviewer. One further edit — MET #4 — was a
+keying error rather than a revision, tagged `corrected`; it restores the intended blind verdict and
+scores as a blind match.
+
+**Two things `score` does not currently know.** It reads `human_category` as recorded, so it has no
+notion of a blind rate and prints the inflated number. It also ignores the `UNINFORMATIVE` flags,
+keeping both flagged MET rows in the denominator (89.6% over 48, where the exclusion-aware count is
+91% over 46). The flagging work of [`taxonomy.md`](taxonomy.md) therefore affects nothing downstream
+today. Both are gaps in `src/labels/audit.py`, not judgment calls, and both are worth closing before
+the number is published.
+
+**The taxonomy blocks did not produce a clean comparison.** The first 20 risks were reviewed with no
+written definitions and the remaining 38 with `taxonomy.md` open, which was intended to measure
+whether the glosses help. Blind agreement barely moved (70% → 74%) while *recorded* agreement fell
+from 100% to 79% — an artifact of block 1 having revised away every one of its disagreements. The
+blocks also differ by stratum and by company, so they are not comparable, and no claim is made from
+them. Whether written glosses raise agreement remains untested.
+
+**Two findings worth carrying forward.** The test stratum is the weaker one on every axis: 58% blind
+agreement against the random stratum's 76%, and implied teacher recall of **81.5%** (5 risks missed
+of 22) against 96.0% (6 of 145). That is the split the headline eval scores against, so the gold
+labels behind the README's risk-factor F1 are the least reliable in the corpus. The caveat is that
+three filings is at the floor of what `MIN_CLUSTERS_FOR_CI` permits — the [25.0%, 100.0%] interval
+spans nearly the whole range, and the gap between strata is not established by this sample. It is a
+reason to widen the test-stratum audit before trusting the comparison, not a result.
+
 ---
 
 ## Incident log
@@ -588,15 +640,15 @@ dataset is not encumbered.
 - **Llama 3.1 8B is gated** and `HF_TOKEN` is empty (401 on both repos). Either accept the license
   and supply a token, or switch to ungated `Qwen/Qwen2.5-7B-Instruct`. Must settle before renting a
   GPU.
-- **Teacher-agreement rate: harness built, verdicts still owed.** The measurement instrument now
-  exists ([D26](#d26--teacher-labels-are-audited-by-a-blind-human-sample-not-eyeballed)) and the
-  sheet is drawn — 60 risks across 15 filings (12 random + 3 test), seed 0, in `docs/audit/`. What
-  is missing is the reading: `python -m src.labels.audit review`, roughly 3–4 hours, resumable, and
-  the one item on this list that needs a human rather than a GPU. Until those verdicts exist, every
-  risk-factor number in the README is conditional on an untested assumption, and the "spot-checked
-  by hand" claim is unsupported. What *is* checked automatically: every example with an empty gold
-  risk list is flagged `risk_factors_by_reference` (4 of 220 — USB ×3, WFC), so none is silently
-  scored against an empty target.
+- **Teacher-agreement rate: measured.** All 60 sampled risks across 15 filings are reviewed
+  ([D26](#d26--teacher-labels-are-audited-by-a-blind-human-sample-not-eyeballed)). Blind agreement is
+  72% overall — 76% random stratum, 58% test stratum — against a recorded 86%; see
+  [D29](#d29--the-audit-reports-blind-agreement-not-the-recorded-rate) for why the two differ and
+  which one is published. Grounding and summary faithfulness are 100% in both strata. What remains is
+  in the tooling, not the reading: `score` reports the recorded rate and ignores the `UNINFORMATIVE`
+  flags, so both need closing before the number goes in the README. What *is* checked automatically:
+  every example with an empty gold risk list is flagged `risk_factors_by_reference` (4 of 220 — USB
+  ×3, WFC), so none is silently scored against an empty target.
 - **Base-model baseline not yet run.** It is the "before" in the headline comparison and should be
   the first thing the rented GPU does.
 - **Revenue is unrecoverable for 4 of 220 filings** (Duke Energy FY2025, NextEra FY2025, Truist

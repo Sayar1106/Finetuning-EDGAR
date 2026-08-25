@@ -8,7 +8,14 @@ Numeric ground truth comes from SEC's **XBRL companyfacts API**, so the hardest 
 figures) are free and exact rather than teacher-model generated. Qualitative fields (risk-factor
 categories/summaries) are teacher-LLM labeled, and audited against a blind human sample —
 `python -m src.labels.audit` draws the sheet, collects verdicts, and reports agreement with
-filing-clustered intervals. _Verdicts pending; the rates below carry no audit number yet._
+filing-clustered intervals. All 60 sampled risks across 15 filings are now reviewed: **72% blind
+category agreement** (76% random stratum, 58% test stratum), 100% grounded in the filing text, 100%
+summary-faithful. Agreement rises to 86% if verdicts revised after seeing the teacher's answer are
+counted as recorded — the blind figure is the one reported, and the gap is itself a finding
+([D29](docs/decisions.md#d29--the-audit-reports-blind-agreement-not-the-recorded-rate)). Category
+boundaries are documented in [`docs/taxonomy.md`](docs/taxonomy.md), reverse-engineered from the
+teacher's own usage because the prompt never defined them
+([D28](docs/decisions.md#d28--the-taxonomy-ships-to-the-teacher-undefined-and-the-audit-found-it)).
 
 ## Results
 
