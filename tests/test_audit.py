@@ -11,8 +11,11 @@ import json
 from src.data.schema import FinancialFacts
 from src.labels.audit import (
     LabeledFiling,
+    blind_category,
+    check_notes,
     draw_sample,
     format_report,
+    is_uninformative,
     load_labeled_filings,
     risk_section_of,
     score_sheet,
@@ -315,3 +318,116 @@ def test_no_interval_is_produced_from_too_few_filings():
     assert report.category_agreement == 1.0
     assert report.cis == {}
     assert "under the" in format_report(report)
+
+
+# --- note markers: blind verdicts and uninformative rows --------------------------
+
+
+REVISED = "revised 2026-01-01: blind verdict was '{}'; changed to match teacher. NOT a blind verdict."
+UNINFORMATIVE = "UNINFORMATIVE: no recoverable rule for this theme; exclude when reporting."
+
+
+def test_the_published_rate_is_blind_not_the_revised_answer():
+    # Both rows read as agreement on the sheet, but one was changed after seeing the teacher's.
+    rows = [
+        make_sheet_row(0, "market", "market"),
+        make_sheet_row(1, "operational", "operational", note=REVISED.format("cyber")),
+    ]
+    report = score_sheet(rows, [], n_resamples=0)
+    assert report.category_agreement == 0.5
+    assert report.category_agreement_recorded == 1.0
+    assert report.n_revised == 1
+
+
+def test_a_revision_that_still_disagrees_counts_against_both_rates():
+    rows = [make_sheet_row(0, "legal", "regulatory", note=REVISED.format("climate"))]
+    report = score_sheet(rows, [], n_resamples=0)
+    assert report.category_agreement == 0.0
+    assert report.category_agreement_recorded == 0.0
+
+
+def test_a_keying_correction_scores_as_a_blind_match():
+    # `corrected` carries no "blind verdict was" clause: the reviewer's judgement never changed,
+    # so human_category *is* the blind verdict and the row is a genuine match.
+    note = "corrected 2026-01-01: keying error. Recorded as 'cyber'; intended 'financial'."
+    rows = [make_sheet_row(0, "financial", "financial", note=note)]
+    report = score_sheet(rows, [], n_resamples=0)
+    assert report.category_agreement == 1.0
+    assert report.n_revised == 0
+
+
+def test_confusions_report_the_blind_disagreement_not_the_revised_one():
+    rows = [make_sheet_row(0, "operational", "operational", note=REVISED.format("cyber"))]
+    report = score_sheet(rows, [], n_resamples=0)
+    assert report.confusions == {("operational", "cyber"): 1}
+
+
+def test_uninformative_rows_drop_out_of_the_category_rate():
+    rows = [
+        make_sheet_row(0, "market", "market"),
+        make_sheet_row(1, "macroeconomic", "market", note=UNINFORMATIVE),
+    ]
+    report = score_sheet(rows, [], n_resamples=0)
+    assert report.n_reviewed == 2
+    assert report.n_uninformative == 1
+    assert report.category_agreement == 1.0  # the flagged disagreement is excluded, not counted
+    assert report.confusions == {}
+
+
+def test_uninformative_rows_still_score_grounding_and_summary():
+    # Only the category was unanswerable; the reviewer could still read the text.
+    rows = [
+        make_sheet_row(0, "market", "market", grounded=True, summary_ok=True),
+        make_sheet_row(
+            1, "macroeconomic", "market", grounded=False, summary_ok=False, note=UNINFORMATIVE
+        ),
+    ]
+    report = score_sheet(rows, [], n_resamples=0)
+    assert report.grounded_rate == 0.5
+    assert report.summary_ok_rate == 0.5
+
+
+def test_the_word_unflagged_is_not_an_uninformative_marker():
+    row = make_sheet_row(0, "market", "market", note="unflagged 2026-01-01: not UNINFORMATIVE after all")
+    assert is_uninformative(row) is False
+
+
+def test_blind_category_falls_back_to_the_recorded_answer():
+    assert blind_category(make_sheet_row(0, "market", "market")) == "market"
+    assert blind_category(make_sheet_row(0, "market", None)) is None
+
+
+def test_check_notes_catches_a_revision_with_no_recoverable_verdict():
+    rows = [make_sheet_row(0, "market", "market", note="revised 2026-01-01: changed my mind")]
+    problems = check_notes(rows)
+    assert len(problems) == 1
+    assert "blind verdict" in problems[0]
+
+
+def test_check_notes_catches_an_unparseable_uninformative_mention():
+    rows = [make_sheet_row(0, "market", "market", note="this looks UNINFORMATIVE to me")]
+    problems = check_notes(rows)
+    assert len(problems) == 1
+    assert "still being scored" in problems[0]
+
+
+def test_check_notes_is_silent_on_well_formed_markers():
+    rows = [
+        make_sheet_row(0, "market", "market"),
+        make_sheet_row(1, "operational", "operational", note=REVISED.format("cyber")),
+        make_sheet_row(2, "macroeconomic", "market", note=UNINFORMATIVE),
+    ]
+    assert check_notes(rows) == []
+
+
+def test_the_anchoring_gap_interval_is_reported_when_rows_were_revised():
+    rows = [
+        make_sheet_row(i, "market", "market", accession_no=f"acc{i // 2}", id=f"acc{i // 2}#{i}")
+        for i in range(6)
+    ]
+    rows[0]["note"] = REVISED.format("cyber")
+    report = score_sheet(rows, [], n_resamples=200)
+    gap = report.cis["anchoring_gap"]
+    assert gap.low >= 0.0
+    assert gap.high > 0.0
+    assert "Anchoring gap" in format_report(report)

@@ -302,11 +302,11 @@ afterward, and on eight risks the reviewer re-read the text and changed their an
 such edit is recorded in the row's `note` with the original verdict preserved, so both rates stay
 computable:
 
-| Slice | n | Recorded | Blind |
-|---|---:|---:|---:|
-| All scorable | 58 | 50/58 (86%) | 42/58 (**72%**) |
-| random stratum | 46 | 42/46 (91%) | 35/46 (**76%**) |
-| test stratum | 12 | 8/12 (67%) | 7/12 (**58%**) |
+| Slice | n | Recorded | Blind | Blind 95% CI |
+|---|---:|---:|---:|:---:|
+| random stratum | 46 | 91.3% | **76.1%** | [65.2%, 87.0%] |
+| test stratum | 12 | 66.7% | **58.3%** | [25.0%, 100.0%] |
+| All scorable | 58 | 86% | **72%** | — (strata are not pooled) |
 
 The 14-point spread is not a reviewer failing; it is the predictable shape of revising under
 feedback. The revision is **one-directional** — a verdict that happened to agree with the teacher is
@@ -320,12 +320,26 @@ as the measure of how much seeing the answer moved the reviewer. One further edi
 keying error rather than a revision, tagged `corrected`; it restores the intended blind verdict and
 scores as a blind match.
 
-**Two things `score` does not currently know.** It reads `human_category` as recorded, so it has no
-notion of a blind rate and prints the inflated number. It also ignores the `UNINFORMATIVE` flags,
-keeping both flagged MET rows in the denominator (89.6% over 48, where the exclusion-aware count is
-91% over 46). The flagging work of [`taxonomy.md`](taxonomy.md) therefore affects nothing downstream
-today. Both are gaps in `src/labels/audit.py`, not judgment calls, and both are worth closing before
-the number is published.
+**`score` now computes both rates itself.** It previously read `human_category` as recorded — no
+notion of a blind rate — and ignored the `UNINFORMATIVE` flags, keeping both MET rows in the
+denominator (89.6% over 48 against the exclusion-aware 76.1% over 46). Both are fixed:
+`blind_category` recovers the pre-revision verdict, flagged rows drop out of the category rate while
+still counting toward grounding and summary, and the report prints the blind figure as the headline
+with the recorded one beside it. The rates in this document are now `score` output rather than hand
+arithmetic, and the confusion table lists blind disagreements to match.
+
+The three things that change a row's score — `revised`, `corrected`, `UNINFORMATIVE` — live in the
+free-text `note` field, which makes them a parsing target. They are documented as a small grammar at
+the top of `audit.py`, and `check_notes` runs before every `score` to fail loudly on a marker that
+does not parse: a `revised` note with no recoverable verdict, a blind category that is not in the
+taxonomy, the word UNINFORMATIVE appearing outside a real marker. A silently misparsed note would
+move a published rate, which is precisely the failure this audit exists to prevent.
+
+**The gap survives resampling.** The bootstrap now draws the paired difference (recorded − blind)
+within each resample, since both rates come from the same rows. On the random stratum the gap is
+**+15.2%, 95% CI [4.5%, 27.1%]** — the interval excludes zero, so anchoring is established on this
+sample rather than merely observed. On the test stratum it is +8.3%, CI [0.0%, 25.0%], which does
+not exclude zero; with one revision across three filings it could not have.
 
 **The taxonomy blocks did not produce a clean comparison.** The first 20 risks were reviewed with no
 written definitions and the remaining 38 with `taxonomy.md` open, which was intended to measure
@@ -644,9 +658,9 @@ dataset is not encumbered.
   ([D26](#d26--teacher-labels-are-audited-by-a-blind-human-sample-not-eyeballed)). Blind agreement is
   72% overall — 76% random stratum, 58% test stratum — against a recorded 86%; see
   [D29](#d29--the-audit-reports-blind-agreement-not-the-recorded-rate) for why the two differ and
-  which one is published. Grounding and summary faithfulness are 100% in both strata. What remains is
-  in the tooling, not the reading: `score` reports the recorded rate and ignores the `UNINFORMATIVE`
-  flags, so both need closing before the number goes in the README. What *is* checked automatically:
+  which one is published. Grounding and summary faithfulness are 100% in both strata. `score` reports the
+  blind rate directly, excludes the flagged rows, and validates the note markers it depends on, so
+  the README's figures are tool output rather than hand arithmetic. What *is* checked automatically:
   every example with an empty gold risk list is flagged `risk_factors_by_reference` (4 of 220 — USB
   ×3, WFC), so none is silently scored against an empty target.
 - **Base-model baseline not yet run.** It is the "before" in the headline comparison and should be

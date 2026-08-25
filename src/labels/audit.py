@@ -29,6 +29,14 @@ the human's, then compares programmatically. Grounding and summary verdicts nece
 teacher's text, so only the category verdict gets this treatment; it is also the only one used as
 the headline.
 
+That blindness has to survive scoring, too. `review` prints DIFFERS right after the verdict is
+taken, and a reviewer who then re-reads the text and changes their answer has produced something
+that is no longer blind -- so `score` reports the *pre-revision* verdict, recovered from the row's
+note, and shows the recorded rate beside it as a diagnostic. The two differ by 15 points on the
+completed sheet. The asymmetry is the reason: a verdict that happens to agree with the teacher is
+never re-examined, because nothing prompts a second look, so revision can only ever move the rate
+up. See `blind_category` and D29.
+
 **The sample is clustered by filing, and so is the interval.** A uniform draw of 50 risks would land
 in ~50 distinct filings, each demanding its own read of Item 1A -- hours of work for one number. So
 `sample` draws filings first, then risks within them. That makes the items non-independent (one
@@ -46,6 +54,7 @@ import argparse
 import hashlib
 import json
 import random
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -277,15 +286,91 @@ def _read_jsonl(path: Path) -> list[dict]:
 # ------------------------------------------------------------------------------------------------
 
 
+# ------------------------------------------------------------------------------------------------
+# Note markers
+# ------------------------------------------------------------------------------------------------
+#
+# `review` writes one blind verdict per row and never revisits it. Everything after that -- a
+# reviewer who re-read the text, a mis-keypress, a row whose category was never answerable -- is
+# recorded by hand in the row's free-text `note`. Three markers there change how a row scores, so
+# they are a grammar rather than prose, and this is the whole of it:
+#
+#   revised <date>: blind verdict was '<category>'; ...
+#       The reviewer changed their answer after `review` printed DIFFERS. `human_category` holds the
+#       post-revision answer; the quoted category is what they said blind.
+#
+#   corrected <date>: ... Recorded as '<category>'; intended '<category>'. ...
+#       A keying error. `human_category` holds the intended answer, which *is* the blind verdict --
+#       the reviewer's judgement never changed, only the keystroke. Scores as blind.
+#
+#   UNINFORMATIVE: ...
+#       The category was not answerable: the teacher has no recoverable rule for this risk's subject
+#       (see docs/taxonomy.md). Agreement here measures nothing in either direction, so the row is
+#       dropped from the category rate. Its grounding and summary verdicts still count -- those were
+#       answerable.
+#
+# A note that looks like it carries a marker but does not parse is a silent scoring error, so
+# `check_notes` exists to catch it and `score` runs it before reporting.
+
+_BLIND_RE = re.compile(r"blind verdict was '([a-z_]+)'")
+_UNINFORMATIVE_RE = re.compile(r"\bUNINFORMATIVE\b\s*:")
+_REVISED_RE = re.compile(r"\brevised\b")
+
+
+def is_uninformative(row: dict) -> bool:
+    """True if this row's category verdict is excluded from the agreement rate."""
+    return bool(_UNINFORMATIVE_RE.search(row.get("note") or ""))
+
+
+def blind_category(row: dict) -> Optional[str]:
+    """The category the reviewer chose before seeing the teacher's.
+
+    Identical to `human_category` except on rows revised after the fact, where the original verdict
+    is recovered from the note. This is the rate the audit publishes: revision under feedback is
+    one-directional -- a verdict that happens to agree with the teacher is never re-examined -- so
+    counting post-revision answers inflates agreement by construction (D29).
+    """
+    match = _BLIND_RE.search(row.get("note") or "")
+    return match.group(1) if match else row.get("human_category")
+
+
+def check_notes(rows: list[dict]) -> list[str]:
+    """Complaints about notes whose markers will not parse. Empty means every marker was understood."""
+    problems = []
+    for row in rows:
+        note = row.get("note") or ""
+        if _REVISED_RE.search(note) and not _BLIND_RE.search(note):
+            problems.append(
+                f"{row['id']}: note says 'revised' but carries no \"blind verdict was '<category>'\" "
+                "clause, so the original verdict cannot be recovered and the row scores as if it "
+                "were blind."
+            )
+        blind = _BLIND_RE.search(note)
+        if blind and blind.group(1) not in RISK_CATEGORIES:
+            problems.append(f"{row['id']}: blind verdict '{blind.group(1)}' is not a known category.")
+        if "UNINFORMATIVE" in note and not _UNINFORMATIVE_RE.search(note):
+            problems.append(
+                f"{row['id']}: note mentions UNINFORMATIVE but not as a 'UNINFORMATIVE:' marker, "
+                "so the row is still being scored."
+            )
+    return problems
+
+
 @dataclass
 class AuditReport:
     stratum: Optional[str]
     n_reviewed: int
     n_total: int
     n_filings: int
+    # Blind: the reviewer's pre-revision verdict, over rows that were answerable. This is the
+    # published rate. `recorded` counts post-revision answers instead and is reported beside it as
+    # the measure of how far seeing the teacher's answer moved the reviewer (D29).
     category_agreement: Optional[float]
     grounded_rate: Optional[float]
     summary_ok_rate: Optional[float]
+    category_agreement_recorded: Optional[float] = None
+    n_uninformative: int = 0
+    n_revised: int = 0
     # (teacher category, human category) -> count, for disagreements only.
     confusions: dict[tuple[str, str], int] = field(default_factory=dict)
     missed_risks: Optional[int] = None
@@ -343,15 +428,18 @@ def score_sheet(
     reviewed = [
         r for r in risk_rows if r["id"] not in stale_ids and r.get("human_category") is not None
     ]
+    # Only the *category* verdict is unanswerable on a flagged row; its grounding and summary
+    # verdicts stand, so the exclusion is per-metric rather than per-row.
+    scorable = [r for r in reviewed if not is_uninformative(r)]
 
     by_filing: dict[str, list[dict]] = {}
     for row in reviewed:
         by_filing.setdefault(row["accession_no"], []).append(row)
 
     confusions: dict[tuple[str, str], int] = {}
-    for row in reviewed:
-        if row["human_category"] != row["teacher_category"]:
-            key = (row["teacher_category"], row["human_category"])
+    for row in scorable:
+        if blind_category(row) != row["teacher_category"]:
+            key = (row["teacher_category"], blind_category(row))
             confusions[key] = confusions.get(key, 0) + 1
 
     read = [f for f in filing_rows if f.get("missed_risks") is not None]
@@ -361,7 +449,12 @@ def score_sheet(
         n_reviewed=len(reviewed),
         n_total=len(risk_rows),
         n_filings=len(by_filing),
-        category_agreement=_rate([r["human_category"] == r["teacher_category"] for r in reviewed]),
+        category_agreement=_rate([blind_category(r) == r["teacher_category"] for r in scorable]),
+        category_agreement_recorded=_rate(
+            [r["human_category"] == r["teacher_category"] for r in scorable]
+        ),
+        n_uninformative=len(reviewed) - len(scorable),
+        n_revised=sum(1 for r in scorable if blind_category(r) != r["human_category"]),
         grounded_rate=_rate([bool(r["grounded"]) for r in reviewed if r["grounded"] is not None]),
         summary_ok_rate=_rate(
             [bool(r["summary_ok"]) for r in reviewed if r["summary_ok"] is not None]
@@ -392,12 +485,26 @@ def _bootstrap(
     if n < MIN_CLUSTERS_FOR_CI or n_resamples <= 0:
         return {}
 
-    draws: dict[str, list[float]] = {"category_agreement": [], "grounded_rate": [], "summary_ok_rate": []}
+    draws: dict[str, list[float]] = {
+        "category_agreement": [],
+        "category_agreement_recorded": [],
+        "anchoring_gap": [],
+        "grounded_rate": [],
+        "summary_ok_rate": [],
+    }
     rng = random.Random(seed)
     for _ in range(n_resamples):
         pooled = [row for _ in range(n) for row in clusters[rng.randrange(n)]]
+        scorable = [r for r in pooled if not is_uninformative(r)]
         for key, values in (
-            ("category_agreement", [r["human_category"] == r["teacher_category"] for r in pooled]),
+            (
+                "category_agreement",
+                [blind_category(r) == r["teacher_category"] for r in scorable],
+            ),
+            (
+                "category_agreement_recorded",
+                [r["human_category"] == r["teacher_category"] for r in scorable],
+            ),
             ("grounded_rate", [bool(r["grounded"]) for r in pooled if r["grounded"] is not None]),
             (
                 "summary_ok_rate",
@@ -407,6 +514,13 @@ def _bootstrap(
             rate = _rate(values)
             if rate is not None:
                 draws[key].append(rate)
+        # Paired within the draw, because the two rates are computed over the same resampled rows.
+        # An interval on the difference that excludes zero is what makes the anchoring gap a finding
+        # rather than a coincidence of this particular sample.
+        blind = _rate([blind_category(r) == r["teacher_category"] for r in scorable])
+        recorded = _rate([r["human_category"] == r["teacher_category"] for r in scorable])
+        if blind is not None and recorded is not None:
+            draws["anchoring_gap"].append(recorded - blind)
 
     tail = (1.0 - confidence) / 2.0
     out: dict[str, ConfidenceInterval] = {}
@@ -447,6 +561,13 @@ def format_report(report: AuditReport) -> str:
         lines.append("=" * 68)
         return "\n".join(lines)
 
+    if report.n_uninformative:
+        lines.append(
+            f"  {report.n_uninformative} row(s) EXCLUDED from the category rate as UNINFORMATIVE -- "
+            "the teacher has no recoverable rule for these (docs/taxonomy.md), so agreement on them "
+            "measures nothing. Their grounding and summary verdicts still count."
+        )
+
     lines.append("")
     for label, value, key in (
         ("Category agreement", report.category_agreement, "category_agreement"),
@@ -458,6 +579,29 @@ def format_report(report: AuditReport) -> str:
         ci = report.cis.get(key)
         interval = f"  95% CI {ci}" if ci else ""
         lines.append(f"  {label:22s} {value:6.1%}{interval}")
+    if report.n_revised:
+        recorded = report.category_agreement_recorded
+        gap_ci = report.cis.get("anchoring_gap")
+        lines.append("")
+        lines.append(
+            f"  Category agreement is BLIND: the reviewer's verdict before `review` showed the "
+            f"teacher's. On {report.n_revised} row(s) they then changed their answer to match, "
+            f"which would read as {recorded:.1%}."
+        )
+        if gap_ci is not None:
+            established = "excludes 0, so the gap is not sampling noise" if gap_ci.low > 0 else (
+                "includes 0, so this sample does not establish the gap"
+            )
+            lines.append(
+                f"  Anchoring gap (recorded - blind): {recorded - report.category_agreement:+.1%}"
+                f"  95% CI {gap_ci} -- {established}."
+            )
+        lines.append(
+            "  Revision under feedback is one-directional: a verdict that happens to agree is never "
+            "re-examined, so the recorded rate is inflated by construction. Publish the blind one."
+        )
+        lines.append("")
+
     if report.cis:
         lines.append("  Intervals are percentile bootstrap resampling filings, not items.")
     else:
@@ -658,6 +802,15 @@ def _cmd_score(args: argparse.Namespace) -> None:
     risk_rows = _read_jsonl(SHEET_PATH)
     filing_rows = _read_jsonl(FILINGS_PATH)
     filings = load_labeled_filings()
+
+    # A marker that does not parse changes a rate silently, so it is worth a loud failure.
+    problems = check_notes(risk_rows)
+    if problems:
+        print("Note markers that will not parse -- fix these before trusting the rates below:")
+        for problem in problems:
+            print(f"  {problem}")
+        print()
+
     for stratum in STRATA:
         if not any(r.get("stratum") == stratum for r in risk_rows):
             continue
