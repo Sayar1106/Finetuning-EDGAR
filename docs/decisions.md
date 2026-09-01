@@ -651,9 +651,15 @@ dataset is not encumbered.
 
 ## Open questions
 
-- **Llama 3.1 8B is gated** and `HF_TOKEN` is empty (401 on both repos). Either accept the license
-  and supply a token, or switch to ungated `Qwen/Qwen2.5-7B-Instruct`. Must settle before renting a
-  GPU.
+- **Base model: settled on Llama 3.1 8B Instruct.** Access to the gated repo was granted 2026-08-28
+  and `HF_TOKEN` is set, so `config.json`, the tokenizer, and the weight shards all resolve 200 for
+  `meta-llama/Llama-3.1-8B-Instruct` and for the base `Llama-3.1-8B`. `configs/sft_llama31_8b.yaml`
+  already targeted it, so no config changed. The ungated Apache-2.0 fallback
+  `Qwen/Qwen2.5-7B-Instruct` was not needed. What the choice costs is
+  [Q9](#q9--licensing-of-the-published-artifact): the community license binds the derivative, so the
+  published adapter needs a `Llama-` name prefix and a "Built with Llama" attribution in its model
+  card. Qwen would have carried neither — that is the price of the stronger base, paid at publish
+  time rather than train time.
 - **Teacher-agreement rate: measured.** All 60 sampled risks across 15 filings are reviewed
   ([D26](#d26--teacher-labels-are-audited-by-a-blind-human-sample-not-eyeballed)). Blind agreement is
   72% overall — 76% random stratum, 58% test stratum — against a recorded 86%; see
