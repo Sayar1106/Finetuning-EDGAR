@@ -119,7 +119,8 @@ def load_model_and_tokenizer(config: dict, token: str | None):
     return model, tokenizer
 
 
-def run(config: dict, smoke: bool = False, output_dir: Path | None = None) -> Path:
+def run(config: dict, smoke: bool = False, output_dir: Path | None = None,
+        resume: bool = False) -> Path:
     import torch
     from transformers import Trainer, TrainingArguments
 
@@ -132,6 +133,7 @@ def run(config: dict, smoke: bool = False, output_dir: Path | None = None) -> Pa
         config = {**config, "model_id": SMOKE_MODEL, "max_seq_len": 4096, "load_in_4bit": False}
         config["run_name"] = "smoke"
         config["wandb"] = {"enabled": False}
+        config["hub"] = {"enabled": False}  # a throwaway 0.5B adapter has no business on the Hub
         config["training"] = {
             **config["training"],
             "num_train_epochs": 1,
@@ -170,6 +172,24 @@ def run(config: dict, smoke: bool = False, output_dir: Path | None = None) -> Pa
     if not torch.cuda.is_available():
         training["bf16"] = False  # bf16 autocast is CUDA-only in this trainer path
 
+    hub = config.get("hub") or {}
+    hub_enabled = bool(hub.get("enabled")) and bool(token)
+    if hub.get("enabled") and not token:
+        # Silently training with no durable destination is the failure this block exists to prevent,
+        # so it is worth a loud line in the log rather than a surprise at the end of a paid run.
+        logger.warning(
+            "hub.enabled is set but HF_TOKEN is empty -- checkpoints stay on local disk only"
+        )
+    if hub_enabled:
+        training.update(
+            push_to_hub=True,
+            hub_model_id=hub["model_id"],
+            hub_strategy=hub.get("strategy", "checkpoint"),
+            hub_private_repo=bool(hub.get("private", True)),
+            hub_token=token,
+        )
+        logger.info("Checkpoints push to https://huggingface.co/%s", hub["model_id"])
+
     args = TrainingArguments(
         output_dir=str(out),
         run_name=config["run_name"],
@@ -185,7 +205,7 @@ def run(config: dict, smoke: bool = False, output_dir: Path | None = None) -> Pa
         eval_dataset=eval_ds,
         data_collator=PaddingCollator(tokenizer),
     )
-    result = trainer.train()
+    result = trainer.train(resume_from_checkpoint=resume or None)
 
     trainer.save_model(str(out))
     tokenizer.save_pretrained(str(out))
@@ -193,6 +213,12 @@ def run(config: dict, smoke: bool = False, output_dir: Path | None = None) -> Pa
     # a shell history is not reproducible.
     (out / "train_config.json").write_text(json.dumps(config, indent=2, default=str))
     (out / "train_metrics.json").write_text(json.dumps(result.metrics, indent=2))
+
+    if hub_enabled:
+        # Explicit, and last: pushes output_dir as it now stands, so train_config.json and
+        # train_metrics.json land beside the adapter rather than only the weights.
+        trainer.push_to_hub(commit_message=f"{config['run_name']}: final adapter")
+        logger.info("Pushed final adapter to %s", hub["model_id"])
 
     logger.info("Saved adapter to %s", out)
     print(f"\nTrain: {train_stats.summary()}")
@@ -208,6 +234,9 @@ def main() -> None:
     parser.add_argument("--smoke", action="store_true",
                         help="Tiny ungated model, 8 examples, 1 epoch -- validates the pipeline")
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume from the last checkpoint in --output-dir (or pull it from the "
+                             "Hub first) after an interrupted run")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -216,7 +245,8 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         stream=sys.stdout,
     )
-    run(load_config(args.config, args.overrides), smoke=args.smoke, output_dir=args.output_dir)
+    run(load_config(args.config, args.overrides), smoke=args.smoke,
+        output_dir=args.output_dir, resume=args.resume)
 
 
 if __name__ == "__main__":

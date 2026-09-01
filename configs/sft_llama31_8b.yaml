@@ -57,3 +57,19 @@ training:
 wandb:
   project: finetuning-edgar
   enabled: true
+
+# Checkpoints leave the box as they are written, not only at the end. The run is on rented -- likely
+# pre-emptible -- hardware, where a dropped session or a reclaimed spot instance otherwise costs
+# every epoch already paid for. `checkpoint` uploads the resumable `last-checkpoint` folder (LoRA
+# weights plus optimizer state; the frozen 4-bit base is never uploaded, so this is hundreds of MB,
+# not tens of GB), which is what makes `--resume` possible after an interruption.
+#
+# The `Llama-` prefix on model_id is not cosmetic: the community license requires it on derivatives,
+# along with "Built with Llama" attribution in the card -- see Q9 in docs/decisions.md.
+hub:
+  enabled: true
+  model_id: Sayar1106/Llama-3.1-8B-edgar-10k-qlora
+  strategy: checkpoint
+  # Private until the model card is written; publishing is a deliberate later step, not a
+  # side effect of training.
+  private: true
