@@ -1,5 +1,8 @@
 # Finetuning-EDGAR
 
+[![Model on Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Llama--3.1--8B--edgar--10k--qlora-FFD21E)](https://huggingface.co/Sayar1106/Llama-3.1-8B-edgar-10k-qlora)
+[![License: Llama 3.1](https://img.shields.io/badge/model%20license-Llama%203.1%20Community-2C5A88)](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/blob/main/LICENSE)
+
 Fine-tuning an open-source LLM (Llama 3.1 8B, QLoRA) to read SEC 10-K filings and extract
 **structured financial data** — key financials, business segments, and categorized risk factors —
 as validated JSON.
