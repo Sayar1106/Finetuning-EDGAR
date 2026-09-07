@@ -103,6 +103,75 @@ Fastest single-GPU stack for an 8B model, and the laptop is disk-constrained (se
 machinery, small enough to train on CPU/MPS in under a minute. Catches loop bugs before any rented
 GPU time is billed.
 
+### D30 — A100 80GB on RunPod, chosen for reliability rather than price
+A pre-flight review of `src/train/` (2026-09-07) returned NO-GO on two counts: the paid run would
+have been the first-ever execution of the training loop, and checkpoints had nowhere durable to
+land. The second is fixed in code (see [D31](#d31--checkpoints-leave-the-box-as-they-are-written));
+the first is a runbook step. It also flagged that this run had no cost estimate, unlike every other
+spend in the project. This entry is that estimate.
+
+Sizing, from the processed splits on disk: 186 training examples averaging ~8.2K tokens give
+~1.5M tokens per epoch, ~4.6M over three epochs, across ~70 optimizer steps at an effective batch
+of 8. The longest example is ~11.6K tokens, so `max_seq_len: 12288` clears it with headroom. These
+are a chars/3.6 proxy; `python -m src.train.measure` replaces them with the real distribution on
+the box, and is step 2 of the runbook for exactly that reason.
+
+**The finding that decided it: the run costs roughly $2-4, not $40.** At Unsloth throughput on an
+A100, 4.6M tokens is 30-45 minutes of compute — call it 60-90 minutes wall-clock including the 16GB
+weight download, the smoke run, `measure`, and both eval passes. Against a <$40 project budget with
+~$1.74 already spent ($1.40 labeling, $0.34 Sonnet eval), price is not the binding constraint. So
+the instance was chosen to avoid repeating the run, not to shave a dollar off it:
+
+- **`NVIDIA A100-SXM4-80GB` on RunPod secure cloud, $1.59/hr, on-demand.** Unsloth wheels are
+  well-trodden on Ampere, which matters because `src/train/sft.py:66` falls back to transformers+peft
+  on `ImportError` — a silent ~2x slowdown, not a failure. 80GB also buys
+  `per_device_train_batch_size: 2` with `gradient_accumulation_steps: 4`: identical effective batch,
+  meaningfully faster than the batch-1 config a 40GB card forces. Provision a 50-100GB volume for
+  base weights plus checkpoints.
+
+  SXM rather than the PCIe variant this entry first named: the live catalog (2026-09-07) reports
+  `NVIDIA A100 80GB PCIe` at availability LOW against SXM's HIGH, at an identical $1.59 secure
+  price, and SXM is the faster interconnect. The cheaper option was queued behind stock, not behind
+  money — which is the same reasoning as everything below, applied to a fact the estimate could not
+  have known. Community cloud is $1.39 vs $1.59 secure; $0.30 over the whole run does not buy out of
+  a community host's reliability.
+- **Not spot.** Hub checkpointing now makes pre-emption survivable, but at these totals spot saves
+  about a dollar and costs an interruption.
+- **Not a 24GB 4090** (~$0.30/hr, would probably fit): the savings are noise against an OOM
+  discovered mid-run.
+- **Not an H100** (~$2.50/hr): finishes sooner for about the same total, and adds version friction
+  on a stack that has never been executed.
+- **Not Colab**: session limits and no guaranteed A100 are wrong for a run worth not repeating.
+
+One instance stays alive across the whole sequence — smoke, `measure`, base-model baseline,
+fine-tune, fine-tuned eval, Q5 throughput. Re-downloading 16GB of weights is the only step here
+that wastes real money.
+
+### D31 — Checkpoints leave the box as they are written
+Until the pre-flight, `src/train/sft.py` wrote checkpoints only to local `outputs/`, and the repo
+had no `push_to_hub`, `hub_model_id`, or `resume_from_checkpoint` anywhere. On rented hardware a
+dropped session or a reclaimed instance would have destroyed every epoch already paid for, with
+nothing to restart from. A `hub` block in `configs/sft_llama31_8b.yaml` now drives
+`TrainingArguments`.
+
+`strategy: checkpoint` rather than `every_save`: the former uploads the resumable `last-checkpoint`
+folder, LoRA weights plus optimizer state. Because the frozen 4-bit base is never uploaded, that is
+hundreds of MB rather than tens of GB — cheap enough that resumability is worth paying for.
+`--resume` is the consuming half; pushed checkpoints nothing can restart from would not justify the
+upload.
+
+Two smaller choices. The final push runs *after* `train_config.json` and `train_metrics.json` are
+written, so the reproducibility files travel with the adapter instead of the weights alone. And an
+enabled hub with an empty `HF_TOKEN` warns loudly and falls back to local disk rather than failing —
+the same silent-failure class as the W&B gate, which is worth a log line rather than a discovery at
+the end of a paid run. Smoke mode forces the whole block off; a throwaway 0.5B adapter has no
+business creating a Hub repo.
+
+The repo name `Llama-3.1-8B-edgar-10k-qlora` carries the prefix the community license requires of
+derivatives ([Q9](#q9--licensing-of-the-published-artifact)), with the reason in a config comment so
+it does not read as arbitrary later. It stays private until the model card is written: publishing is
+a deliberate step, not a side effect of training.
+
 ---
 
 ## 4. Evaluation
