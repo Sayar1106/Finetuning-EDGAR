@@ -103,7 +103,9 @@ See extras in `pyproject.toml` for stage-specific dependencies (`labels`, `train
 Module-level data flow, caches, and where each artifact comes from:
 [`docs/architecture.md`](docs/architecture.md).
 
-Full plan and rationale: see the project plan.
+Every non-obvious choice, with the evidence behind it:
+[`docs/decisions.md`](docs/decisions.md). Run logs from the GPU session:
+[`docs/runs/`](docs/runs/).
 
 ## License and attribution
 

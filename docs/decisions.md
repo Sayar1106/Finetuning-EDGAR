@@ -820,11 +820,19 @@ thing this project's eval design exists to avoid. The conservative direction is 
 headline claim, but the number understates true performance.
 
 ### Q9 — Licensing of the published artifact
-Llama 3.1's community license imposes conditions on derivatives — relevant because the plan
-publishes weights and a model card to HF Hub. Qwen2.5-7B-Instruct is Apache 2.0 and carries none of
-that, which was an argument for Qwen beyond merely dodging the gated-repo problem
+Llama 3.1's community license imposes conditions on derivatives. **These are no longer anticipated:
+the adapter and its model card were published publicly to the Hub on 2026-09-07** at
+[`Sayar1106/Llama-3.1-8B-edgar-10k-qlora`](https://huggingface.co/Sayar1106/Llama-3.1-8B-edgar-10k-qlora),
+so every obligation below is discharged in a file someone can go and check rather than a plan to
+comply. Qwen2.5-7B-Instruct is Apache 2.0 and carries none of it, which was an argument for Qwen
+beyond merely dodging the gated-repo problem
 ([D30](#d30--a100-80gb-on-runpod-chosen-for-reliability-rather-than-price) settled it for Llama).
 SEC filing content is public domain; the derived dataset is not encumbered.
+
+Publication was gated on one thing that had nothing to do with licensing: the pre-publication scan
+that found the write token inside `training_args.bin`
+([I6](#i6--the-hf-write-token-was-published-inside-training_argsbin)). The repo went public only
+after that token was rotated and the old one verified dead.
 
 **The obligations, read off the Agreement rather than recalled.** An earlier version of this entry
 named two conditions from memory. The text was fetched 2026-09-07 from the canonical
