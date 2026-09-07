@@ -1,0 +1,470 @@
+<title>Filing to JSON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:      #F4F6F8;
+    --surface:     #FFFFFF;
+    --surface-sunk:#EDF0F4;
+    --ink:         #14181F;
+    --ink-soft:    #58616F;
+    --ink-faint:   #8A93A2;
+    --rule:        #DCE1E8;
+    --rule-strong: #C3CBD6;
+    --accent:      #2C5A88;
+    --accent-soft: #E4EDF6;
+    --pass:        #1C7048;
+    --pass-soft:   #E1F0E7;
+    --fail:        #9E322C;
+    --fail-soft:   #F8E5E3;
+    --warn:        #7E5C10;
+    --warn-soft:   #F6EEDA;
+
+    --f-display: "Spectral", Georgia, "Times New Roman", serif;
+    --f-body:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --f-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0E1116;
+      --surface:     #161B22;
+      --surface-sunk:#11161C;
+      --ink:         #E4E8EE;
+      --ink-soft:    #98A1B0;
+      --ink-faint:   #6B7484;
+      --rule:        #242B35;
+      --rule-strong: #333C48;
+      --accent:      #7BA6D2;
+      --accent-soft: #1A2733;
+      --pass:        #52BE8B;
+      --pass-soft:   #14251C;
+      --fail:        #E08479;
+      --fail-soft:   #2A1A18;
+      --warn:        #D4A945;
+      --warn-soft:   #262013;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #0E1116;
+    --surface:     #161B22;
+    --surface-sunk:#11161C;
+    --ink:         #E4E8EE;
+    --ink-soft:    #98A1B0;
+    --ink-faint:   #6B7484;
+    --rule:        #242B35;
+    --rule-strong: #333C48;
+    --accent:      #7BA6D2;
+    --accent-soft: #1A2733;
+    --pass:        #52BE8B;
+    --pass-soft:   #14251C;
+    --fail:        #E08479;
+    --fail-soft:   #2A1A18;
+    --warn:        #D4A945;
+    --warn-soft:   #262013;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 48px 28px 80px; }
+  .prose { max-width: 68ch; }
+
+  h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+  h1 { font-size: 40px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; }
+  h2 { font-size: 25px; font-weight: 600; letter-spacing: -0.01em; }
+  h3 { font-size: 17px; font-weight: 600; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-family: var(--f-mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+    margin: 0 0 12px;
+  }
+  .lede { font-size: 18px; color: var(--ink-soft); margin: 16px 0 0; }
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 36px; }
+
+  section { margin-top: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+  .sec-note { font-size: 13px; color: var(--ink-faint); font-family: var(--f-mono); }
+
+  /* headline figures — used once, because these two numbers are the page's point */
+  .figures { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 30px; }
+  .fig-n {
+    font-family: var(--f-display); font-size: 44px; font-weight: 600;
+    line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .fig-n .from { color: var(--ink-faint); }
+  .fig-n .arw  { color: var(--rule-strong); margin: 0 6px; font-size: 30px; }
+  .fig-n .to   { color: var(--accent); }
+  .fig-l { font-size: 13px; color: var(--ink-soft); margin-top: 8px; max-width: 30ch; }
+
+  /* the three output panels */
+  .panels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  @media (max-width: 940px) { .panels { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--surface); border: 1px solid var(--rule);
+    display: flex; flex-direction: column; min-width: 0;
+  }
+  .panel.win { border-color: var(--accent); }
+  .panel-hd { padding: 14px 16px; border-bottom: 1px solid var(--rule); }
+  .panel-hd h3 { margin-bottom: 3px; }
+  .panel-sub { font-size: 12px; color: var(--ink-faint); font-family: var(--f-mono); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .chip {
+    font-family: var(--f-mono); font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 2px; white-space: nowrap;
+  }
+  .chip.pass { background: var(--pass-soft); color: var(--pass); }
+  .chip.fail { background: var(--fail-soft); color: var(--fail); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  pre {
+    margin: 0; padding: 14px 16px; overflow-x: auto; flex: 1;
+    background: var(--surface-sunk); max-height: 340px; overflow-y: auto;
+    font-family: var(--f-mono); font-size: 11.5px; line-height: 1.55; color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+  }
+  pre b { color: var(--fail); font-weight: 500; background: var(--fail-soft); }
+  pre i { color: var(--pass); font-style: normal; font-weight: 500; background: var(--pass-soft); }
+  .panel-ft {
+    padding: 11px 16px; border-top: 1px solid var(--rule);
+    font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+  th {
+    font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; color: var(--ink-faint);
+    letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--rule-strong);
+  }
+  td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+  td.tick { font-family: var(--f-mono); font-weight: 500; }
+  tr.low td { background: var(--warn-soft); }
+  .cells { display: inline-flex; gap: 3px; }
+  .cell { display: inline-block; width: 15px; height: 15px; border-radius: 2px; flex: none; }
+  .cell.exact { background: var(--pass); }
+  .cell.close { background: var(--warn); }
+  .cell.wrong { background: var(--fail); }
+  .tbl-scroll { overflow-x: auto; }
+
+  .note {
+    border-left: 2px solid var(--accent); padding: 2px 0 2px 18px;
+    margin-top: 22px; max-width: 68ch;
+  }
+  .kv { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink-soft); }
+  footer {
+    margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--rule);
+    font-size: 12.5px; color: var(--ink-faint); font-family: var(--f-mono); line-height: 1.9;
+  }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--ink-soft); margin-top: 14px; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">SEC 10-K &middot; structured extraction &middot; Llama 3.1 8B QLoRA</p>
+  <h1>Filing to JSON</h1>
+  <p class="lede">
+    The same 8B model, the same filing, the same greedy decoding &mdash; before and after fine-tuning
+    on 186 10-K filings. The interesting failure is not that the base model gets the numbers wrong.
+    It gets them right, and still cannot be parsed.
+  </p>
+  <div class="figures">
+    <div>
+      <div class="fig-n"><span class="from">0%</span><span class="arw">&rarr;</span><span class="to">100%</span></div>
+      <div class="fig-l">Output parses as the target schema with no repair, across 12 held-out filings</div>
+    </div>
+    <div>
+      <div class="fig-n"><span class="from">43.5</span><span class="arw">&rarr;</span><span class="to">77.3</span></div>
+      <div class="fig-l">Risk-factor category F1, macro-averaged over filings</div>
+    </div>
+    <div>
+      <div class="fig-n"><span class="from">83.3</span><span class="arw">&rarr;</span><span class="to">97.9</span></div>
+      <div class="fig-l">Numeric accuracy &mdash; already high before fine-tuning, which is the honest caveat</div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head">
+    <h2>One filing, three attempts</h2>
+    <span class="sec-note">MCDONALDS CORP &middot; FY2025 10-K &middot; 23,997-char excerpt</span>
+  </div>
+  <p class="prose" style="color:var(--ink-soft)">
+    Verbatim model output, nothing cleaned up. Red marks what breaks the contract; green marks the
+    detail that shows the model learned the schema rather than guessed it.
+  </p>
+
+  <div class="panels">
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>Base &middot; prose prompt</h3>
+        <div class="panel-sub">no schema shown</div>
+        <div class="chips">
+          <span class="chip fail">unparseable</span>
+          <span class="chip fail">0 / 4 numerics</span>
+          <span class="chip fail">no categories</span>
+        </div>
+      </div>
+<pre><b>Here is the JSON object with the company's
+identifying details, key financial figures,
+and risk factors:</b>
+
+<b>```</b>
+{
+  <b>"company": {
+    "name": "McDonald's Corporation",
+    "ticker": "MCD"
+  }</b>,
+  "financials": {
+    "revenue": 26885000000,
+    <b>"operating_income": 12393000000</b>,
+    "net_income": 8563000000,
+    <b>"earnings_per_share_diluted"</b>: 11.95,
+    <b>"weighted_average_shares_outstanding
+     _diluted": 716.4</b>
+  },
+  "risk_factors": [
+    {
+      <b>"description"</b>: "Failure to evolve and
+        execute business strategies",
+      <b>"impact"</b>: "Business, financial condition,
+        and results of operations may suffer"
+    },
+    ... 4 more, same shape
+  ]
+}
+<b>```</b>
+
+<b>Note: The risk factors are based on the provided
+text and may not be an exhaustive list...</b></pre>
+      <div class="panel-ft">
+        Every number here is <em>correct</em>. It still scores zero: the field names are invented
+        (<span class="kv">operating_income</span>, <span class="kv">earnings_per_share_diluted</span>),
+        <span class="kv">company</span> is nested rather than flat, shares are in millions, and risk
+        factors carry <span class="kv">description</span>/<span class="kv">impact</span> instead of a
+        category &mdash; so the qualitative task is not attempted at all.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>Base &middot; schema prompt</h3>
+        <div class="panel-sub">full JSON schema in-prompt</div>
+        <div class="chips">
+          <span class="chip fail">fenced</span>
+          <span class="chip warn">4 / 4 after repair</span>
+          <span class="chip warn">cat F1 43.5</span>
+        </div>
+      </div>
+<pre><b>```json</b>
+{
+  "company": "MCDONALDS CORP",
+  "ticker": "MCD",
+  "fiscal_year": 2025,
+  "form_type": "10-K",
+  "financials": {
+    "revenue": 26885000000,
+    "net_income": 8563000000,
+    "total_assets": 59515000000,
+    "eps_diluted": 11.95,
+    <b>"shares_outstanding_diluted": 7164000000</b>,
+    "unit": "USD"
+  },
+  "risk_factors": [
+    {
+      "title": "Failure to evolve and execute
+        business strategies",
+      "category": "operational",
+      "summary": "..."
+    },
+    ...
+  ]
+}
+<b>```</b></pre>
+      <div class="panel-ft">
+        Handed the schema, it produces the right shape &mdash; then wraps it in a markdown fence, so
+        strict parsing fails on all 12 filings. Only fence-and-prose stripping recovers it, at 91.7%.
+        It also fills <span class="kv">shares_outstanding_diluted</span> where the gold value is
+        <span class="kv">null</span>.
+      </div>
+    </div>
+
+    <div class="panel win">
+      <div class="panel-hd">
+        <h3>Fine-tuned &middot; prose prompt</h3>
+        <div class="panel-sub">adapter, no schema shown</div>
+        <div class="chips">
+          <span class="chip pass">parses</span>
+          <span class="chip pass">4 / 4 exact</span>
+          <span class="chip pass">cat F1 92</span>
+        </div>
+      </div>
+<pre>{
+  "company": "MCDONALDS CORP",
+  "ticker": "MCD",
+  "fiscal_year": 2025,
+  "form_type": "10-K",
+  "financials": {
+    "revenue": <i>26885000000.0</i>,
+    "net_income": <i>8563000000.0</i>,
+    "total_assets": <i>59515000000.0</i>,
+    "eps_diluted": <i>11.95</i>,
+    "shares_outstanding_diluted": <i>null</i>,
+    "unit": "USD"
+  },
+  "risk_factors": [
+    {
+      "title": "Inability to successfully execute
+        business strategies",
+      "category": <i>"operational"</i>,
+      "summary": "The company may fail to execute
+        its growth strategies..."
+    },
+    ... 5 more
+  ]
+}</pre>
+      <div class="panel-ft">
+        Bare JSON, no fence, no preamble &mdash; and the same prompt that produced the first column.
+        It returns <span class="kv">null</span> for the field the filing does not support, which is
+        the tell that the schema is in the weights rather than being guessed from the prompt.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>All twelve held-out filings</h2>
+    <span class="sec-note">fine-tuned model, prose prompt</span>
+  </div>
+  <p class="prose" style="color:var(--ink-soft)">
+    Companies are split by ticker before fiscal year is known, so no company appears in both training
+    and test. The two weakest rows are shaded &mdash; they are here because a page that showed only
+    McDonald's would be selling something.
+  </p>
+  <div class="tbl-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Filing</th><th>Gold risks</th><th>Parses</th>
+        <th>rev &middot; ni &middot; assets &middot; eps</th>
+        <th class="num" style="text-align:right">Category F1</th>
+        <th class="num" style="text-align:right">Match F1</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  </div>
+  <div class="legend">
+    <span><i class="cell exact"></i> exact</span>
+    <span><i class="cell close"></i> within 1%</span>
+    <span><i class="cell wrong"></i> wrong</span>
+  </div>
+
+  <div class="note">
+    <p><strong>NFLX is the real failure.</strong> It parses and all four numbers are right, but
+    category F1 is 42 and match F1 is 11 &mdash; the model found risks the teacher labels did not
+    pair with. Netflix discloses only 5 risk factors, so a single mismatch moves the number a long
+    way. <strong>PANW is the opposite:</strong> 47 disclosed risks, and F1 of 89 / 96.</p>
+    <p style="margin:0"><strong>WFC has no risk rows at all.</strong> It satisfies Item 1A by
+    cross-reference, so there is no risk text in the filing. It is flagged in the data and excluded
+    from risk scoring rather than counted as a zero.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Against a frontier model</h2>
+    <span class="sec-note">same 12 filings</span>
+  </div>
+  <div class="tbl-scroll">
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Prompt</th><th class="num">Parses strict</th><th class="num">Numeric</th><th class="num">Category F1</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="tick">Llama 3.1 8B base</td><td>prose</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num">0.0</td></tr>
+      <tr><td class="tick">Llama 3.1 8B base</td><td>schema</td><td class="num">0.0%</td><td class="num">83.3%</td><td class="num">43.5</td></tr>
+      <tr><td class="tick"><strong>This adapter</strong></td><td>prose</td><td class="num"><strong>100.0%</strong></td><td class="num"><strong>97.9%</strong></td><td class="num"><strong>77.3</strong></td></tr>
+      <tr><td class="tick">Claude Sonnet 5</td><td>schema</td><td class="num">33.3%</td><td class="num">97.9%</td><td class="num">79.2</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note">
+    <p style="margin:0">An 8B adapter matches the frontier model on content &mdash; identical numeric
+    accuracy, category F1 within two points &mdash; and beats it three-to-one on emitting JSON that
+    parses without repair. It does <em>not</em> beat it on cost: measured at 58 seconds per filing on
+    a rented A100, inference works out to $0.0256 against Sonnet's $0.0283. That is parity, not the
+    twentieth this project originally claimed, and the claim was withdrawn rather than softened.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>What the numbers do not cover</h2>
+  </div>
+  <div class="prose">
+    <p><strong>Twelve filings is a small test set.</strong> Every figure on this page carries a 95%
+    bootstrap confidence interval in the checked-in reports, resampled over filings because fields
+    within one filing are correlated. Category F1 of 77.3 has an interval of [68.0, 85.4].</p>
+    <p><strong>The risk labels come from a teacher model, and the teacher is the ceiling.</strong>
+    Categories and summaries were generated by Claude Haiku 4.5 and audited against a blind human
+    sample &mdash; 60 risks across 15 filings. Blind agreement with the human reviewer was 72%. So
+    77.3 should be read against roughly that, not against perfection. The four financial figures have
+    no such problem: they come from SEC XBRL companyfacts and are exact.</p>
+    <p><strong>Greedy decoding is not bit-reproducible across hardware.</strong> Re-running these
+    same three configurations on an A40 with a newer transformers build moved numeric accuracy to
+    100.0% and category F1 to 80.0%, and made one base-model filing parse strictly. Different kernels
+    round differently, one argmax flips, and the generation diverges. The figures published here are
+    the lower of the two runs.</p>
+  </div>
+</section>
+
+<footer>
+  Llama-3.1-8B-edgar-10k-qlora &middot; r=32, &alpha;=64, 3 epochs configured, epoch 2 shipped on eval loss<br>
+  Generated 2026-09-07 &middot; base weights meta-llama/Llama-3.1-8B-Instruct &middot; greedy decoding, unconstrained<br>
+  Raw model outputs: data/eval/predictions/ &middot; scored reports: data/eval/reports/ &middot; run logs: docs/runs/<br>
+  Built with Llama. Filing text is public domain; risk labels are teacher-generated and audited.
+</footer>
+
+</div>
+
+<script>
+  const ROWS = [
+    {t:"CI",g:9,s:true,n:["exact","wrong","exact","exact"],c:89,m:78},
+    {t:"DG",g:7,s:true,n:["close","exact","exact","exact"],c:80,m:80},
+    {t:"EA",g:8,s:true,n:["exact","exact","exact","exact"],c:93,m:80},
+    {t:"EXC",g:9,s:true,n:["close","exact","exact","exact"],c:75,m:88},
+    {t:"GE",g:6,s:true,n:["close","exact","exact","exact"],c:62,m:50},
+    {t:"LRCX",g:7,s:true,n:["exact","exact","exact","exact"],c:67,m:50},
+    {t:"MCD",g:6,s:true,n:["exact","exact","exact","exact"],c:92,m:92},
+    {t:"MMM",g:6,s:true,n:["exact","exact","exact","exact"],c:80,m:80},
+    {t:"NFLX",g:5,s:true,n:["exact","exact","close","exact"],c:42,m:11},
+    {t:"PANW",g:47,s:true,n:["exact","exact","exact","exact"],c:89,m:96},
+    {t:"PLD",g:7,s:true,n:["exact","close","exact","exact"],c:80,m:67},
+    {t:"WFC",g:0,s:true,n:["exact","exact","exact","exact"],c:null,m:null}
+  ];
+  const LOW = new Set(["NFLX", "GE"]);
+  document.getElementById("rows").innerHTML = ROWS.map(r => `
+    <tr class="${LOW.has(r.t) ? "low" : ""}">
+      <td class="tick">${r.t}</td>
+      <td class="num">${r.g === 0 ? "&mdash;" : r.g}</td>
+      <td><span class="chip ${r.s ? "pass" : "fail"}">${r.s ? "yes" : "no"}</span></td>
+      <td><span class="cells">${r.n.map(v => `<span class="cell ${v}" title="${v}"></span>`).join("")}</span></td>
+      <td class="num">${r.c === null ? "&mdash;" : r.c}</td>
+      <td class="num">${r.m === null ? "&mdash;" : r.m}</td>
+    </tr>`).join("");
+</script>

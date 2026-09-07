@@ -1,0 +1,176 @@
+=== 1/3 base schema Mon Sep  7 10:23:45 UTC 2026 ===
+2026-09-07 10:23:47,598 INFO eval: Scoring 12 examples from test.jsonl
+2026-09-07 10:23:53,473 INFO httpx: HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
+2026-09-07 10:23:53,623 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:54,230 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:55,121 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:55,235 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:55,534 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-09-07 10:23:55,632 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-09-07 10:23:55,783 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:56,026 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:56,539 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer.model "HTTP/1.1 404 Not Found"
+2026-09-07 10:23:56,733 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+2026-09-07 10:23:56,935 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:57,191 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:57,523 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-09-07 10:23:59,186 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct "HTTP/1.1 200 OK"
+2026-09-07 10:23:59,311 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 10:23:59,713 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+2026-09-07 10:24:00,420 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 10:24:02,729 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+2026-09-07 10:24:02,833 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-09-07 10:24:03,104 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-09-07 10:24:03,428 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/revision/main "HTTP/1.1 200 OK"
+2026-09-07 10:24:03,513 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/0e9e39f249a16976918f6564b8830bc894c89659?recursive=true&expand=false "HTTP/1.1 200 OK"
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]2026-09-07 10:24:04,206 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/xet-read-token/0e9e39f249a16976918f6564b8830bc894c89659 "HTTP/1.1 200 OK"
+Fetching 4 files:  25%|██▌       | 1/4 [00:09<00:28,  9.65s/it]Fetching 4 files:  50%|█████     | 2/4 [00:17<00:17,  8.84s/it]Fetching 4 files: 100%|██████████| 4/4 [00:18<00:00,  4.50s/it]
+Loading weights:   0%|          | 0/291 [00:00<?, ?it/s]Loading weights:   0%|          | 1/291 [00:00<01:05,  4.45it/s]Loading weights:   1%|          | 2/291 [00:00<00:56,  5.09it/s]Loading weights:   3%|▎         | 9/291 [00:00<00:11, 24.26it/s]Loading weights:   8%|▊         | 22/291 [00:00<00:05, 53.10it/s]Loading weights:  11%|█         | 32/291 [00:00<00:04, 63.08it/s]Loading weights:  14%|█▍        | 41/291 [00:00<00:03, 67.92it/s]Loading weights:  17%|█▋        | 50/291 [00:00<00:03, 68.36it/s]Loading weights:  20%|██        | 59/291 [00:01<00:03, 73.82it/s]Loading weights:  23%|██▎       | 68/291 [00:01<00:02, 76.27it/s]Loading weights:  27%|██▋       | 78/291 [00:01<00:02, 82.62it/s]Loading weights:  32%|███▏      | 94/291 [00:01<00:01, 99.64it/s]Loading weights:  36%|███▌      | 105/291 [00:01<00:01, 95.80it/s]Loading weights:  41%|████      | 118/291 [00:01<00:01, 103.61it/s]Loading weights:  45%|████▍     | 130/291 [00:01<00:01, 104.93it/s]Loading weights:  48%|████▊     | 141/291 [00:01<00:01, 90.34it/s] Loading weights:  52%|█████▏    | 151/291 [00:02<00:01, 90.56it/s]Loading weights:  57%|█████▋    | 166/291 [00:02<00:01, 101.95it/s]Loading weights:  61%|██████    | 177/291 [00:02<00:01, 100.18it/s]Loading weights:  66%|██████▋   | 193/291 [00:02<00:00, 112.29it/s]Loading weights:  70%|███████   | 205/291 [00:02<00:00, 110.05it/s]Loading weights:  75%|███████▍  | 218/291 [00:02<00:00, 115.19it/s]Loading weights:  79%|███████▉  | 230/291 [00:02<00:00, 109.37it/s]Loading weights:  83%|████████▎ | 242/291 [00:02<00:00, 106.85it/s]Loading weights:  87%|████████▋ | 253/291 [00:02<00:00, 105.65it/s]Loading weights:  91%|█████████▏| 266/291 [00:03<00:00, 106.89it/s]Loading weights:  96%|█████████▌| 280/291 [00:03<00:00, 114.38it/s]Loading weights: 100%|██████████| 291/291 [00:03<00:00, 89.72it/s] 
+2026-09-07 10:24:27,234 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:24:27,394 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:24:27,770 INFO src.eval.predict: [1/12] CI
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+2026-09-07 10:24:49,910 INFO src.eval.predict: [2/12] DG
+2026-09-07 10:25:04,891 INFO src.eval.predict: [3/12] EA
+2026-09-07 10:25:17,862 INFO src.eval.predict: [4/12] EXC
+2026-09-07 10:25:35,160 INFO src.eval.predict: [5/12] GE
+2026-09-07 10:25:45,100 INFO src.eval.predict: [6/12] LRCX
+2026-09-07 10:25:58,558 INFO src.eval.predict: [7/12] MCD
+2026-09-07 10:26:14,566 INFO src.eval.predict: [8/12] MMM
+2026-09-07 10:26:27,194 INFO src.eval.predict: [9/12] NFLX
+2026-09-07 10:26:44,325 INFO src.eval.predict: [10/12] PANW
+2026-09-07 10:28:05,053 INFO src.eval.predict: [11/12] PLD
+2026-09-07 10:28:21,459 INFO src.eval.predict: [12/12] WFC
+2026-09-07 10:28:28,268 INFO eval: generated 12, cached 0, failed 0, truncated 0, refused 0
+
+### base-llama-schema  (n=12)
+
+| Metric | Value | 95% CI |
+| --- | --- | --- |
+| Schema valid (strict) | 8.3% | [0.0%, 25.0%] |
+| Schema valid (after fence/prose stripping) | 91.7% | [75.0%, 100.0%] |
+| Numeric accuracy (all fields) | 83.3% | [64.6%, 97.9%] |
+| Risk category F1 (macro) | 43.2% | [31.2%, 54.2%] |
+| Risk match F1 (macro, lower bound) | 45.6% | [29.6%, 60.5%] |
+| Category accuracy among matched | 52.3% | -- |
+
+| Numeric field | accuracy | 95% CI | exact | close | scale err | wrong | missing | spurious | n/a |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| revenue | 91.7% | [75.0%, 100.0%] | 8 | 3 | 0 | 0 | 1 | 0 | 0 |
+| net_income | 75.0% | [50.0%, 100.0%] | 8 | 1 | 0 | 2 | 1 | 0 | 0 |
+| total_assets | 83.3% | [58.3%, 100.0%] | 9 | 1 | 0 | 1 | 1 | 0 | 0 |
+| eps_diluted | 83.3% | [58.3%, 100.0%] | 10 | 0 | 0 | 1 | 1 | 0 | 0 |
+
+_Intervals are percentile bootstrap over filings (10,000 resamples, seed 0). Filings are the resampling unit because numeric fields within one filing are correlated._
+
+_Risk scoring covers 11 of 12 filings; 1 filing satisfies Item 1A by cross-reference and contains no risk text._
+
+Wrote data/eval/reports/base-llama-schema_schema_test.json
+=== 2/3 base trained Mon Sep  7 10:28:30 UTC 2026 ===
+2026-09-07 10:28:30,890 INFO eval: Scoring 12 examples from test.jsonl
+2026-09-07 10:28:35,177 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 10:28:35,511 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:28:35,629 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-09-07 10:28:35,769 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-09-07 10:28:36,897 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct "HTTP/1.1 200 OK"
+2026-09-07 10:28:36,974 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+2026-09-07 10:28:37,391 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/291 [00:00<?, ?it/s]Loading weights:   0%|          | 1/291 [00:00<00:52,  5.49it/s]Loading weights:   1%|          | 2/291 [00:00<00:53,  5.39it/s]Loading weights:   3%|▎         | 9/291 [00:00<00:11, 25.49it/s]Loading weights:   8%|▊         | 22/291 [00:00<00:04, 55.51it/s]Loading weights:  11%|█         | 32/291 [00:00<00:03, 67.94it/s]Loading weights:  15%|█▍        | 43/291 [00:00<00:03, 80.35it/s]Loading weights:  20%|█▉        | 58/291 [00:00<00:02, 96.47it/s]Loading weights:  24%|██▎       | 69/291 [00:01<00:02, 95.16it/s]Loading weights:  29%|██▉       | 85/291 [00:01<00:01, 107.47it/s]Loading weights:  33%|███▎      | 96/291 [00:01<00:01, 100.31it/s]Loading weights:  37%|███▋      | 109/291 [00:01<00:01, 106.60it/s]Loading weights:  42%|████▏     | 121/291 [00:01<00:01, 106.36it/s]Loading weights:  45%|████▌     | 132/291 [00:01<00:01, 99.17it/s] Loading weights:  50%|████▉     | 145/291 [00:01<00:01, 106.10it/s]Loading weights:  54%|█████▍    | 157/291 [00:01<00:01, 107.01it/s]Loading weights:  58%|█████▊    | 168/291 [00:01<00:01, 99.87it/s] Loading weights:  62%|██████▏   | 181/291 [00:02<00:01, 107.71it/s]Loading weights:  66%|██████▋   | 193/291 [00:02<00:00, 109.02it/s]Loading weights:  70%|███████   | 205/291 [00:02<00:00, 103.74it/s]Loading weights:  75%|███████▍  | 217/291 [00:02<00:00, 107.91it/s]Loading weights:  79%|███████▊  | 229/291 [00:02<00:00, 109.45it/s]Loading weights:  83%|████████▎ | 241/291 [00:02<00:00, 104.30it/s]Loading weights:  88%|████████▊ | 256/291 [00:02<00:00, 110.64it/s]Loading weights:  92%|█████████▏| 268/291 [00:02<00:00, 105.58it/s]Loading weights:  97%|█████████▋| 283/291 [00:03<00:00, 111.20it/s]Loading weights: 100%|██████████| 291/291 [00:03<00:00, 95.00it/s] 
+2026-09-07 10:28:44,032 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:28:44,076 INFO src.eval.predict: [1/12] CI
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+2026-09-07 10:29:01,539 INFO src.eval.predict: [2/12] DG
+2026-09-07 10:29:23,179 INFO src.eval.predict: [3/12] EA
+2026-09-07 10:29:52,254 INFO src.eval.predict: [4/12] EXC
+2026-09-07 10:30:06,780 INFO src.eval.predict: [5/12] GE
+2026-09-07 10:30:19,138 INFO src.eval.predict: [6/12] LRCX
+2026-09-07 10:30:42,465 INFO src.eval.predict: [7/12] MCD
+2026-09-07 10:30:53,659 INFO src.eval.predict: [8/12] MMM
+2026-09-07 10:31:12,570 INFO src.eval.predict: [9/12] NFLX
+2026-09-07 10:31:35,643 INFO src.eval.predict: [10/12] PANW
+2026-09-07 10:32:38,245 INFO src.eval.predict: [11/12] PLD
+2026-09-07 10:32:49,390 INFO src.eval.predict: [12/12] WFC
+2026-09-07 10:32:56,527 INFO eval: generated 12, cached 0, failed 0, truncated 0, refused 0
+
+### base-llama-trained  (n=12)
+
+| Metric | Value | 95% CI |
+| --- | --- | --- |
+| Schema valid (strict) | 0.0% | [0.0%, 0.0%] |
+| Schema valid (after fence/prose stripping) | 0.0% | [0.0%, 0.0%] |
+| Numeric accuracy (all fields) | 0.0% | [0.0%, 0.0%] |
+| Risk category F1 (macro) | 0.0% | [0.0%, 0.0%] |
+| Risk match F1 (macro, lower bound) | 0.0% | [0.0%, 0.0%] |
+| Category accuracy among matched | -- | -- |
+
+| Numeric field | accuracy | 95% CI | exact | close | scale err | wrong | missing | spurious | n/a |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| revenue | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+| net_income | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+| total_assets | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+| eps_diluted | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+
+_Intervals are percentile bootstrap over filings (10,000 resamples, seed 0). Filings are the resampling unit because numeric fields within one filing are correlated._
+
+_Risk scoring covers 11 of 12 filings; 1 filing satisfies Item 1A by cross-reference and contains no risk text._
+
+Wrote data/eval/reports/base-llama-trained_trained_test.json
+=== 3/3 ft trained Mon Sep  7 10:32:58 UTC 2026 ===
+2026-09-07 10:32:58,967 INFO eval: Scoring 12 examples from test.jsonl
+2026-09-07 10:33:02,759 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 10:33:02,981 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:33:03,066 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-09-07 10:33:03,127 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-09-07 10:33:04,605 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct "HTTP/1.1 200 OK"
+2026-09-07 10:33:04,701 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+2026-09-07 10:33:05,085 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/291 [00:00<?, ?it/s]Loading weights:   0%|          | 1/291 [00:00<00:50,  5.74it/s]Loading weights:   1%|          | 2/291 [00:00<00:52,  5.52it/s]Loading weights:   3%|▎         | 9/291 [00:00<00:11, 25.48it/s]Loading weights:   8%|▊         | 22/291 [00:00<00:04, 55.65it/s]Loading weights:  11%|█         | 32/291 [00:00<00:03, 68.46it/s]Loading weights:  15%|█▌        | 44/291 [00:00<00:02, 83.44it/s]Loading weights:  20%|█▉        | 58/291 [00:00<00:02, 96.42it/s]Loading weights:  24%|██▎       | 69/291 [00:01<00:02, 95.07it/s]Loading weights:  29%|██▉       | 85/291 [00:01<00:01, 107.36it/s]Loading weights:  33%|███▎      | 96/291 [00:01<00:01, 100.93it/s]Loading weights:  37%|███▋      | 109/291 [00:01<00:01, 107.56it/s]Loading weights:  42%|████▏     | 121/291 [00:01<00:01, 107.09it/s]Loading weights:  45%|████▌     | 132/291 [00:01<00:01, 99.73it/s] Loading weights:  51%|█████     | 148/291 [00:01<00:01, 109.73it/s]Loading weights:  55%|█████▍    | 160/291 [00:01<00:01, 105.27it/s]Loading weights:  59%|█████▉    | 173/291 [00:01<00:01, 111.44it/s]Loading weights:  64%|██████▎   | 185/291 [00:02<00:01, 105.37it/s]Loading weights:  67%|██████▋   | 196/291 [00:02<00:00, 105.39it/s]Loading weights:  72%|███████▏  | 209/291 [00:02<00:00, 111.91it/s]Loading weights:  76%|███████▌  | 221/291 [00:02<00:00, 106.62it/s]Loading weights:  80%|███████▉  | 232/291 [00:02<00:00, 107.39it/s]Loading weights:  85%|████████▍ | 247/291 [00:02<00:00, 113.18it/s]Loading weights:  89%|████████▉ | 259/291 [00:02<00:00, 108.38it/s]Loading weights:  94%|█████████▍| 274/291 [00:02<00:00, 113.90it/s]Loading weights:  98%|█████████▊| 286/291 [00:03<00:00, 106.92it/s]Loading weights: 100%|██████████| 291/291 [00:03<00:00, 96.31it/s] 
+2026-09-07 10:33:11,263 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:33:11,550 INFO httpx: HTTP Request: HEAD https://huggingface.co/Sayar1106/Llama-3.1-8B-edgar-10k-qlora/resolve/main/adapter_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:33:11,612 INFO httpx: HTTP Request: GET https://huggingface.co/Sayar1106/Llama-3.1-8B-edgar-10k-qlora/resolve/main/adapter_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:33:11,721 INFO httpx: HTTP Request: HEAD https://huggingface.co/Sayar1106/Llama-3.1-8B-edgar-10k-qlora/resolve/main/adapter_config.json "HTTP/1.1 200 OK"
+2026-09-07 10:33:19,671 INFO httpx: HTTP Request: HEAD https://huggingface.co/Sayar1106/Llama-3.1-8B-edgar-10k-qlora/resolve/main/adapter_model.safetensors "HTTP/1.1 302 Found"
+2026-09-07 10:33:19,711 INFO httpx: HTTP Request: HEAD https://huggingface.co/Sayar1106/Llama-3.1-8B-edgar-10k-qlora/resolve/main/adapter_model.safetensors "HTTP/1.1 302 Found"
+2026-09-07 10:33:19,796 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/Sayar1106/Llama-3.1-8B-edgar-10k-qlora/xet-read-token/4a8b84de1aabe5126a0d59dbeb4562774d5d9703 "HTTP/1.1 200 OK"
+2026-09-07 10:33:26,675 INFO src.eval.predict: [1/12] CI
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+2026-09-07 10:34:12,998 INFO src.eval.predict: [2/12] DG
+2026-09-07 10:34:58,648 INFO src.eval.predict: [3/12] EA
+2026-09-07 10:35:39,351 INFO src.eval.predict: [4/12] EXC
+2026-09-07 10:36:17,869 INFO src.eval.predict: [5/12] GE
+2026-09-07 10:37:00,996 INFO src.eval.predict: [6/12] LRCX
+2026-09-07 10:37:35,478 INFO src.eval.predict: [7/12] MCD
+2026-09-07 10:38:14,893 INFO src.eval.predict: [8/12] MMM
+2026-09-07 10:38:54,860 INFO src.eval.predict: [9/12] NFLX
+2026-09-07 10:40:05,276 INFO src.eval.predict: [10/12] PANW
+2026-09-07 10:43:07,488 INFO src.eval.predict: [11/12] PLD
+2026-09-07 10:44:03,883 INFO src.eval.predict: [12/12] WFC
+2026-09-07 10:44:13,375 INFO eval: generated 12, cached 0, failed 0, truncated 0, refused 0
+
+### ft-llama-trained  (n=12)
+
+| Metric | Value | 95% CI |
+| --- | --- | --- |
+| Schema valid (strict) | 100.0% | [100.0%, 100.0%] |
+| Schema valid (after fence/prose stripping) | 100.0% | [100.0%, 100.0%] |
+| Numeric accuracy (all fields) | 100.0% | [100.0%, 100.0%] |
+| Risk category F1 (macro) | 80.0% | [68.8%, 89.1%] |
+| Risk match F1 (macro, lower bound) | 70.0% | [55.3%, 82.6%] |
+| Category accuracy among matched | 73.7% | -- |
+
+| Numeric field | accuracy | 95% CI | exact | close | scale err | wrong | missing | spurious | n/a |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| revenue | 100.0% | [100.0%, 100.0%] | 9 | 3 | 0 | 0 | 0 | 0 | 0 |
+| net_income | 100.0% | [100.0%, 100.0%] | 11 | 1 | 0 | 0 | 0 | 0 | 0 |
+| total_assets | 100.0% | [100.0%, 100.0%] | 12 | 0 | 0 | 0 | 0 | 0 | 0 |
+| eps_diluted | 100.0% | [100.0%, 100.0%] | 12 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+_Intervals are percentile bootstrap over filings (10,000 resamples, seed 0). Filings are the resampling unit because numeric fields within one filing are correlated._
+
+_Risk scoring covers 11 of 12 filings; 1 filing satisfies Item 1A by cross-reference and contains no risk text._
+
+Wrote data/eval/reports/ft-llama-trained_trained_test.json
+=== PREDS_DONE rc=0 Mon Sep  7 10:44:15 UTC 2026 ===

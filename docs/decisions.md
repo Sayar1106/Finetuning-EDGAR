@@ -759,6 +759,26 @@ they were built to represent. The disciplining one: at n=12 a single filing is 8
 of schema-validity, so **any fine-tuned-vs-frontier margin narrower than one filing is not a result**,
 regardless of which side it favours. The published numbers are one draw, not the model's true score.
 
+**The local model is not bit-reproducible either, which was a surprise.** Greedy decoding
+(`do_sample=False`) is deterministic given identical inputs and identical arithmetic — but the
+arithmetic is not identical across hardware. Re-running all three Llama configurations on 2026-09-07
+on an **A40 with transformers 5.16.1**, against the A100/5.5.0 run of the same day
+(`docs/runs/rerun-a40.log`):
+
+| config | metric | A100, tf 5.5.0 | A40, tf 5.16.1 |
+| --- | --- | ---: | ---: |
+| base, schema | strict-valid | 0.0% | 8.3% |
+| base, schema | risk match F1 | 40.9 | 45.6 |
+| fine-tuned | numeric accuracy | 97.9% | 100.0% |
+| fine-tuned | risk category F1 | 77.3 | 80.0 |
+
+Same adapter, same prompts, same greedy decoding, same twelve filings. Different kernels round
+differently, one argmax flips, and the generation diverges from that token on. Each gap is again one
+unit of the underlying count. **The published figures are the lower of the two runs in every case
+that moved**, which is the right direction for a number that goes in a README, and the rerun is
+recorded here so the choice is visible rather than silent. The practical rule is unchanged and now
+applies to the student as well as the baseline: a margin narrower than one filing is not a result.
+
 ### Q8 — Risk-factor F1 rests on lexical overlap
 `src/eval/metrics.py:218` matches predicted to gold risks by title-weighted lexical overlap —
 deterministic, parameter-free, and documented as a **lower bound**. A semantically correct
