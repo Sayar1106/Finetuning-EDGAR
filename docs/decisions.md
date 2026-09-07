@@ -768,11 +768,32 @@ thing this project's eval design exists to avoid. The conservative direction is 
 headline claim, but the number understates true performance.
 
 ### Q9 — Licensing of the published artifact
-Llama 3.1's community license imposes conditions on derivatives, including naming ("Llama" prefix)
-and "Built with Llama" attribution — relevant because the plan publishes weights and a model card to
-HF Hub. Qwen2.5-7B-Instruct is Apache 2.0 and carries none of that, which is an argument for Qwen
-beyond merely dodging the gated-repo problem. SEC filing content is public domain; the derived
-dataset is not encumbered.
+Llama 3.1's community license imposes conditions on derivatives — relevant because the plan
+publishes weights and a model card to HF Hub. Qwen2.5-7B-Instruct is Apache 2.0 and carries none of
+that, which was an argument for Qwen beyond merely dodging the gated-repo problem
+([D30](#d30--a100-80gb-on-runpod-chosen-for-reliability-rather-than-price) settled it for Llama).
+SEC filing content is public domain; the derived dataset is not encumbered.
+
+**The obligations, read off the Agreement rather than recalled.** An earlier version of this entry
+named two conditions from memory. The text was fetched 2026-09-07 from the canonical
+`LICENSE` in `meta-llama/Llama-3.1-8B-Instruct` and §1(b) actually imposes five, of which the notice
+string is exact and therefore the one worth getting character-perfect:
+
+| § | Obligation | Where it is satisfied |
+| --- | --- | --- |
+| 1(b)(i)(A) | Provide a copy of the Agreement with the Materials or derivative | Distributed alongside the weights on the Hub |
+| 1(b)(i)(B) | Prominently display "Built with Llama" on a related website, UI, blogpost, about page, or product documentation | `README.md` License section; `docs/model_card.md` |
+| 1(b)(i) | Include "Llama" at the beginning of the derivative model's name | Repo name `Llama-3.1-8B-edgar-10k-qlora` |
+| 1(b)(iii) | Retain the attribution notice verbatim in a "Notice" text file | [`NOTICE`](../NOTICE), byte-checked against the Agreement |
+| 1(b)(iv) | Comply with the Acceptable Use Policy, incorporated by reference | Linked from the README and the model card |
+
+The required string is `"Llama 3.1 is licensed under the Llama 3.1 Community License, Copyright ©
+Meta Platforms, Inc. All Rights Reserved."` — reproduced in `NOTICE` and verified equal to the
+Agreement's text after whitespace normalisation, because an inexact reproduction fails the very
+requirement it exists to satisfy.
+
+A reviewing agent flagged the earlier two-item list as unsourced, which it was. The lesson generalises
+past this entry: a licence obligation is the last thing to take from a model's memory.
 
 ---
 
@@ -802,10 +823,25 @@ dataset is not encumbered.
   91.7% lenient / 0% strict schema validity, 83.3 numeric, 43.5 risk F1. The "before" in the headline
   comparison is a measurement now, not a placeholder.
 - **Revenue is unrecoverable for 4 of 220 filings** (Duke Energy FY2025, NextEra FY2025, Truist
-  FY2023 and FY2024). Same root cause as [I2](#i2--the-convenience-dict-was-wrong-for-34-of-182-filings):
-  utilities and banks do not tag `us-gaap:Revenues`, and for these four the convenience dict has
-  nothing either, so no warning fires. This does *not* corrupt labels — a field with no gold value is
-  `NOT_SCORED` and drops out of both numerator and denominator (`metrics.py:391`), so the effect is 4
-  fewer scorable instances, not 4 wrong ones. Worth fixing by adding sector-appropriate concepts
-  (`RevenueFromContractWithCustomerExcludingAssessedTax`, `InterestAndDividendIncomeOperating`), but
-  it is a 1.8% denominator issue, not a correctness one.
+  FY2023 and FY2024); 11 training rows carry a null revenue once the grounding check has also run.
+  Related to [I2](#i2--the-convenience-dict-was-wrong-for-34-of-182-filings): for these four the
+  convenience dict has nothing either, so no warning fires. This does *not* corrupt labels — a field
+  with no gold value is `NOT_SCORED` and drops out of both numerator and denominator
+  (`metrics.py:391`). **The scored set loses nothing at all**: `test.jsonl` contains zero revenue
+  nulls and every eval report shows `not_scored: 0` for revenue across 12 of 12 filings. All 11
+  nulls are in train.
+
+  Two things this entry previously said are wrong, corrected 2026-09-07 after a review checked them
+  against the corpus. It is *not* true that "utilities and banks do not tag `us-gaap:Revenues`" —
+  EXC ($24.3B), SO ($29.6B) and WFC ($83.7B) all resolve through the existing concept list with no
+  fallback warning, so the sector framing was never the mechanism. And the fix it recommended is
+  dead: `RevenueFromContractWithCustomerExcludingAssessedTax` has been implemented at
+  `src/data/xbrl_facts.py:49` all along, while `InterestAndDividendIncomeOperating` resolves **0 of
+  the 11** and would convert three defensible Truist nulls into grounded-but-wrong labels — it
+  returns gross interest income, roughly twice the figure the gold convention takes. WFC settles it
+  on a filing already in the test set: it prints both `Total interest income: 87,314,000,000` and
+  `Total revenue: 83,699,000,000`, and the gold takes total revenue. **A null you can explain beats
+  a confident wrong number**, so this stays a known limitation rather than a task. Duke and NextEra
+  are combined multi-registrant filers whose consolidated facts carry an entity dimension and are
+  dropped by the `is_dimensioned` filter (`src/data/xbrl_facts.py:136`) — no concept addition
+  reaches them.

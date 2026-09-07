@@ -94,12 +94,25 @@ See extras in `pyproject.toml` for stage-specific dependencies (`labels`, `train
    and audit the teacher's labels by hand (`src/labels/audit.py`, worksheet in `docs/audit/`).
 3. `src/eval/` — extraction metrics and baseline runs.
 4. `src/train/` — QLoRA fine-tuning on a rented GPU.
-5. `app/` — Gradio demo; model + model card published to Hugging Face Hub.
+5. The adapter is pushed to the Hugging Face Hub as `Sayar1106/Llama-3.1-8B-edgar-10k-qlora`;
+   eval reports for every run are checked in under `data/eval/reports/`, and the model card is at
+   [`docs/model_card.md`](docs/model_card.md).
 
 Module-level data flow, caches, and where each artifact comes from:
 [`docs/architecture.md`](docs/architecture.md).
 
 Full plan and rationale: see the project plan.
+
+## License and attribution
+
+Built with Llama.
+
+The fine-tuned adapter is a derivative of Llama 3.1 and is governed by the
+[Llama 3.1 Community License](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/blob/main/LICENSE);
+use must comply with the [Acceptable Use Policy](https://llama.meta.com/llama3_1/use-policy). The
+attribution notice the Agreement requires is in [`NOTICE`](NOTICE), and the obligations are itemised
+in [Q9](docs/decisions.md#q9--licensing-of-the-published-artifact). This repository's own code is
+MIT ([`LICENSE`](LICENSE)); SEC filing content is public domain.
 
 ## Design decisions
 
