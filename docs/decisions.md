@@ -147,6 +147,14 @@ One instance stays alive across the whole sequence — smoke, `measure`, base-mo
 fine-tune, fine-tuned eval, Q5 throughput. Re-downloading 16GB of weights is the only step here
 that wastes real money.
 
+**Actuals, 2026-09-07.** The session ran 73 minutes wall-clock for **$1.94**, inside the $2-4 estimate.
+The token sizing was not as good: `measure` on the real tokenizer reports median 5,911 and max 8,515
+tokens against the proxy's median ~7,950 and max ~11,557, so the corpus is **~35% smaller than
+estimated** — 1,127,859 training tokens per epoch, not ~1.5M. Training itself took 20.3 minutes, and
+zero examples truncated at `max_seq_len: 12288`, which the proxy could only guess at. The estimate's
+*rate* and *instance* held; its *volume* was high. Worth keeping as a calibration note: a chars/token
+proxy on JSON-heavy text ran a third over, in the direction that makes a budget look worse than it is.
+
 ### D31 — Checkpoints leave the box as they are written
 Until the pre-flight, `src/train/sft.py` wrote checkpoints only to local `outputs/`, and the repo
 had no `push_to_hub`, `hub_model_id`, or `resume_from_checkpoint` anywhere. On rented hardware a
@@ -171,6 +179,27 @@ The repo name `Llama-3.1-8B-edgar-10k-qlora` carries the prefix the community li
 derivatives ([Q9](#q9--licensing-of-the-published-artifact)), with the reason in a config comment so
 it does not read as arbitrary later. It stays private until the model card is written: publishing is
 a deliberate step, not a side effect of training.
+
+### D32 — Three epochs were configured; epoch 2 is what shipped
+The 2026-09-07 run trained the full three epochs in `configs/sft_llama31_8b.yaml`, but validation
+loss turned:
+
+| epoch | eval_loss |
+| --- | --- |
+| 1 | 0.4583 |
+| 2 | **0.4459** |
+| 3 | 0.4709 |
+
+Train loss kept falling to 0.370 while eval loss rose in the third epoch — ordinary overfitting on
+186 examples. Because `load_best_model_at_end: true` with `metric_for_best_model: eval_loss` is set,
+the Trainer restored `checkpoint-48` before saving, so **the published adapter is the epoch-2 model,
+not the epoch-3 model the epoch count implies.** Anyone reading `num_train_epochs: 3` and assuming
+they know which weights are on the Hub would be wrong, which is the reason this is written down.
+
+This is [Q6](#q6--model-selection-on-eval_loss-but-you-report-exact-match-and-f1) earning its keep
+rather than a hypothetical: selecting on `eval_loss` is what prevented shipping the worse model. The
+config is deliberately left at 3 — the third epoch is what produces the evidence that 2 is right, and
+a future run on a larger corpus should re-check rather than inherit the answer.
 
 ---
 
@@ -197,6 +226,15 @@ cost comparison rests on; both are reported.
 
 Prompt mode is part of a run's identity, not a footnote — the prediction cache is keyed on it, and
 the report names it.
+
+**Measured 2026-09-07, and one half of this did not hold.** The student was evaluated under both
+prompts. "Does not need the schema" is confirmed — under the prose-only prompt it scores 100% strict
+schema validity and 97.9% numeric accuracy, where the base model scores 0% on both. But the schema is
+not *inert* for the student either: with it, risk category F1 rises 77.3% -> 82.0% and category
+accuracy among matched risks 72.4% -> 80.1%, while numeric accuracy falls 97.9% -> 93.8%. The
+in-weights claim holds for structure and numerics; for risk categorization the schema still carries
+information the 186 examples did not fully install. The headline row stays `trained` — it is the
+prompt the student was fine-tuned on — but the gap is a real result, not noise to omit.
 
 ### D18 — Macro (per-filing mean) is the headline F1
 One verbose filer discloses 46 risks where another discloses 5. Micro-averaging would let that
@@ -649,13 +687,33 @@ This figure was previously recorded as $0.71 ($0.059/filing). The re-run halved 
 price table, so the earlier number reflects roughly twice the tokens — most likely both prompt modes
 summed rather than the schema run alone ([D17](#d17--two-prompt-modes-both-published)). That is a
 hypothesis, not a finding: the original run's artifacts were lost and the `trained`-mode run has not
-been repeated to confirm it. **The ratio this section builds on doubles if the hypothesis is wrong,
-so the cheaper baseline is the conservative one to quote against a GPU.**
+been repeated to confirm it.
 
-**The honest caveat that survives even after measurement:** a rented GPU billed by the hour is only
-cheap at high utilization. At 12 filings the fixed cost of standing the GPU up dominates and the
-frontier API wins outright. The break-even volume is itself a number worth computing rather than a
-detail to omit.
+### Measured 2026-09-07 — and the ~1/20th claim does not survive
+The three missing numbers now exist, from the fine-tuned `trained`-mode run on the 12 test filings
+(`docs/runs/fteval.log`, `data/eval/reports/ft-llama-trained_trained_test.json`):
+
+| Needed | Measured |
+| --- | --- |
+| Throughput | 696s of generation for 12 filings — **58.0s/filing, ~99 tok/s end to end** |
+| GPU cost | **$1.59/hr**, A100-SXM4-80GB secure ([D30](#d30--a100-80gb-on-runpod-chosen-for-reliability-rather-than-price)) |
+| Tokens per filing | 4,912 in / 805 out (58,944 + 9,664 over 12) |
+
+Running the pre-specified arithmetic: `696s / 3600 × $1.59 = $0.307` for 12 filings, or
+**$0.0256/filing against Sonnet's measured $0.0283 — a ratio of 0.91×.**
+
+**That is parity, not a twentieth**, and it is the generous reading: it counts only generation, and
+excludes the ~13 minutes of model loading the API never pays for. Reaching 1/20th at this rate would
+take **18.1× more throughput**, or the same throughput at $0.09/hr. Neither is available by tuning a
+flag — it needs batched or continuous-batching inference (vLLM, TGI) serving many filings per GPU-second,
+which this project has not built and therefore cannot claim.
+
+So the caveat this section always carried turned out to be the finding, not a hedge: a rented GPU
+billed by the hour is only cheap at high utilization, and at 12 filings sequentially decoded the
+frontier API wins. **The supportable claim is "matches Sonnet's content accuracy at parity cost, with
+a measured path to lower cost through batching" — and the 1/20th figure should not be quoted until
+something measures it.** Where the student does win outright is strict schema validity, 100% against
+Sonnet's 33.3%, which is an output-discipline result rather than a cost one.
 
 ### Q6 — "Model selection on `eval_loss`, but you report exact-match and F1?"
 Yes — `metric_for_best_model: eval_loss` with `load_best_model_at_end`. Cross-entropy on held-out

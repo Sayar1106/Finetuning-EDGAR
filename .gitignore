@@ -231,3 +231,8 @@ wandb/
 
 # Eval: cached model outputs are large and regenerable; reports are the results and are kept.
 data/eval/predictions/
+
+# Run logs are ignored as a class (*.log above), but the GPU session's logs are evidence, not
+# incidental output: Q5's throughput figure and D32's per-epoch eval_loss are read off them and
+# exist in no checked-in artifact. Keep these three.
+!docs/runs/*.log

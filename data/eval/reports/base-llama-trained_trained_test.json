@@ -1,0 +1,292 @@
+{
+  "model": "base-llama-trained",
+  "n": 12,
+  "strict_valid_rate": 0.0,
+  "lenient_valid_rate": 0.0,
+  "numeric_accuracy": 0.0,
+  "confidence_intervals": {
+    "strict_valid_rate": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "lenient_valid_rate": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "numeric_accuracy": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "numeric_revenue": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "numeric_net_income": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "numeric_total_assets": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "numeric_eps_diluted": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "macro_category_f1": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    },
+    "macro_match_f1": {
+      "low": 0.0,
+      "high": 0.0,
+      "confidence": 0.95
+    }
+  },
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 0,
+    "unit": "filing"
+  },
+  "numeric_by_field": {
+    "revenue": {
+      "exact": 0,
+      "close": 0,
+      "scale_error": 0,
+      "wrong": 0,
+      "missing": 12,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 0.0
+    },
+    "net_income": {
+      "exact": 0,
+      "close": 0,
+      "scale_error": 0,
+      "wrong": 0,
+      "missing": 12,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 0.0
+    },
+    "total_assets": {
+      "exact": 0,
+      "close": 0,
+      "scale_error": 0,
+      "wrong": 0,
+      "missing": 12,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 0.0
+    },
+    "eps_diluted": {
+      "exact": 0,
+      "close": 0,
+      "scale_error": 0,
+      "wrong": 0,
+      "missing": 12,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 0.0
+    }
+  },
+  "risk": {
+    "n_scored": 11,
+    "macro_category_f1": 0.0,
+    "macro_match_f1": 0.0,
+    "macro_category_accuracy": null,
+    "micro_category_f1": 0.0,
+    "micro_match_f1": 0.0,
+    "n_gold": 117,
+    "n_pred": 0
+  },
+  "per_filing": [
+    {
+      "ticker": "CI",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 19 validation error(s)"
+    },
+    {
+      "ticker": "DG",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 19 validation error(s)"
+    },
+    {
+      "ticker": "EA",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 18 validation error(s)"
+    },
+    {
+      "ticker": "EXC",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 1 validation error(s)"
+    },
+    {
+      "ticker": "GE",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 12 validation error(s)"
+    },
+    {
+      "ticker": "LRCX",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 7 validation error(s)"
+    },
+    {
+      "ticker": "MCD",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 18 validation error(s)"
+    },
+    {
+      "ticker": "MMM",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 13 validation error(s)"
+    },
+    {
+      "ticker": "NFLX",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 15 validation error(s)"
+    },
+    {
+      "ticker": "PANW",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 51 validation error(s)"
+    },
+    {
+      "ticker": "PLD",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": 0.0,
+      "risk_match_f1": 0.0,
+      "parse_error": "schema: 15 validation error(s)"
+    },
+    {
+      "ticker": "WFC",
+      "strict_valid": false,
+      "lenient_valid": false,
+      "numerics": {
+        "revenue": "missing",
+        "net_income": "missing",
+        "total_assets": "missing",
+        "eps_diluted": "missing"
+      },
+      "risk_category_f1": null,
+      "risk_match_f1": null,
+      "parse_error": "schema: 4 validation error(s)"
+    }
+  ],
+  "split": "test",
+  "prompt_mode": "trained",
+  "generation": {
+    "cached": 0,
+    "generated": 12,
+    "failed": 0,
+    "truncated": 0,
+    "refused": 0,
+    "input_tokens": 58944,
+    "output_tokens": 6798
+  }
+}

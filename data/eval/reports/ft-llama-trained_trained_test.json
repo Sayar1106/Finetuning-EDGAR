@@ -1,0 +1,292 @@
+{
+  "model": "ft-llama-trained",
+  "n": 12,
+  "strict_valid_rate": 1.0,
+  "lenient_valid_rate": 1.0,
+  "numeric_accuracy": 0.9791666666666666,
+  "confidence_intervals": {
+    "strict_valid_rate": {
+      "low": 1.0,
+      "high": 1.0,
+      "confidence": 0.95
+    },
+    "lenient_valid_rate": {
+      "low": 1.0,
+      "high": 1.0,
+      "confidence": 0.95
+    },
+    "numeric_accuracy": {
+      "low": 0.9375,
+      "high": 1.0,
+      "confidence": 0.95
+    },
+    "numeric_revenue": {
+      "low": 1.0,
+      "high": 1.0,
+      "confidence": 0.95
+    },
+    "numeric_net_income": {
+      "low": 0.75,
+      "high": 1.0,
+      "confidence": 0.95
+    },
+    "numeric_total_assets": {
+      "low": 1.0,
+      "high": 1.0,
+      "confidence": 0.95
+    },
+    "numeric_eps_diluted": {
+      "low": 1.0,
+      "high": 1.0,
+      "confidence": 0.95
+    },
+    "macro_category_f1": {
+      "low": 0.6802322056598371,
+      "high": 0.8541958145282612,
+      "confidence": 0.95
+    },
+    "macro_match_f1": {
+      "low": 0.5504510345943717,
+      "high": 0.8265298406528461,
+      "confidence": 0.95
+    }
+  },
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 0,
+    "unit": "filing"
+  },
+  "numeric_by_field": {
+    "revenue": {
+      "exact": 9,
+      "close": 3,
+      "scale_error": 0,
+      "wrong": 0,
+      "missing": 0,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 1.0
+    },
+    "net_income": {
+      "exact": 10,
+      "close": 1,
+      "scale_error": 0,
+      "wrong": 1,
+      "missing": 0,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 0.9166666666666666
+    },
+    "total_assets": {
+      "exact": 11,
+      "close": 1,
+      "scale_error": 0,
+      "wrong": 0,
+      "missing": 0,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 1.0
+    },
+    "eps_diluted": {
+      "exact": 12,
+      "close": 0,
+      "scale_error": 0,
+      "wrong": 0,
+      "missing": 0,
+      "spurious": 0,
+      "not_scored": 0,
+      "accuracy": 1.0
+    }
+  },
+  "risk": {
+    "n_scored": 11,
+    "macro_category_f1": 0.772875951347396,
+    "macro_match_f1": 0.7004755758115221,
+    "macro_category_accuracy": 0.7238095238095238,
+    "micro_category_f1": 0.8065843621399178,
+    "micro_match_f1": 0.7736625514403291,
+    "n_gold": 117,
+    "n_pred": 126
+  },
+  "per_filing": [
+    {
+      "ticker": "CI",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "wrong",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.8888888888888888,
+      "risk_match_f1": 0.7777777777777778,
+      "parse_error": null
+    },
+    {
+      "ticker": "DG",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "close",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.7999999999999999,
+      "risk_match_f1": 0.7999999999999999,
+      "parse_error": null
+    },
+    {
+      "ticker": "EA",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.9333333333333333,
+      "risk_match_f1": 0.7999999999999999,
+      "parse_error": null
+    },
+    {
+      "ticker": "EXC",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "close",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.75,
+      "risk_match_f1": 0.8750000000000001,
+      "parse_error": null
+    },
+    {
+      "ticker": "GE",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "close",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.625,
+      "risk_match_f1": 0.5,
+      "parse_error": null
+    },
+    {
+      "ticker": "LRCX",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.6666666666666666,
+      "risk_match_f1": 0.5,
+      "parse_error": null
+    },
+    {
+      "ticker": "MCD",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.923076923076923,
+      "risk_match_f1": 0.923076923076923,
+      "parse_error": null
+    },
+    {
+      "ticker": "MMM",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.8,
+      "risk_match_f1": 0.8,
+      "parse_error": null
+    },
+    {
+      "ticker": "NFLX",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "exact",
+        "total_assets": "close",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.4210526315789473,
+      "risk_match_f1": 0.10526315789473682,
+      "parse_error": null
+    },
+    {
+      "ticker": "PANW",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.8936170212765957,
+      "risk_match_f1": 0.9574468085106385,
+      "parse_error": null
+    },
+    {
+      "ticker": "PLD",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "close",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": 0.7999999999999999,
+      "risk_match_f1": 0.6666666666666666,
+      "parse_error": null
+    },
+    {
+      "ticker": "WFC",
+      "strict_valid": true,
+      "lenient_valid": true,
+      "numerics": {
+        "revenue": "exact",
+        "net_income": "exact",
+        "total_assets": "exact",
+        "eps_diluted": "exact"
+      },
+      "risk_category_f1": null,
+      "risk_match_f1": null,
+      "parse_error": null
+    }
+  ],
+  "split": "test",
+  "prompt_mode": "trained",
+  "generation": {
+    "cached": 0,
+    "generated": 12,
+    "failed": 0,
+    "truncated": 0,
+    "refused": 0,
+    "input_tokens": 58944,
+    "output_tokens": 9664
+  }
+}

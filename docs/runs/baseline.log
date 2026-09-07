@@ -1,0 +1,110 @@
+=== SCHEMA MODE (competitive baseline) Mon Sep  7 07:48:16 UTC 2026 ===
+2026-09-07 07:48:17,025 INFO eval: Scoring 12 examples from test.jsonl
+2026-09-07 07:48:20,801 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 07:48:20,939 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-09-07 07:48:20,974 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-09-07 07:48:21,014 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-09-07 07:48:22,014 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct "HTTP/1.1 200 OK"
+2026-09-07 07:48:22,064 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 07:48:22,328 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+`torch_dtype` is deprecated! Use `dtype` instead!
+2026-09-07 07:48:23,507 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 07:48:24,284 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+2026-09-07 07:48:24,313 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-09-07 07:48:24,341 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-09-07 07:48:24,385 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/revision/main "HTTP/1.1 200 OK"
+2026-09-07 07:48:24,412 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/0e9e39f249a16976918f6564b8830bc894c89659?recursive=true&expand=false "HTTP/1.1 200 OK"
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]2026-09-07 07:48:24,455 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/xet-read-token/0e9e39f249a16976918f6564b8830bc894c89659 "HTTP/1.1 200 OK"
+Fetching 4 files:  25%|██▌       | 1/4 [00:11<00:35, 11.73s/it]Fetching 4 files:  50%|█████     | 2/4 [00:48<00:52, 26.32s/it]Fetching 4 files: 100%|██████████| 4/4 [00:48<00:00, 12.08s/it]
+Loading weights:   0%|          | 0/291 [00:00<?, ?it/s]Loading weights:   0%|          | 1/291 [00:00<00:36,  8.05it/s]Loading weights:   1%|          | 2/291 [00:00<00:37,  7.74it/s]Loading weights:   3%|▎         | 10/291 [00:00<00:07, 35.42it/s]Loading weights:   8%|▊         | 23/291 [00:00<00:04, 66.83it/s]Loading weights:  11%|█         | 31/291 [00:01<00:18, 14.20it/s]Loading weights:  12%|█▏        | 36/291 [00:02<00:19, 12.96it/s]Loading weights:  14%|█▎        | 40/291 [00:03<00:27,  9.28it/s]Loading weights:  15%|█▍        | 43/291 [00:03<00:23, 10.46it/s]Loading weights:  20%|██        | 59/291 [00:03<00:09, 23.39it/s]Loading weights:  26%|██▋       | 77/291 [00:03<00:05, 40.26it/s]Loading weights:  30%|██▉       | 87/291 [00:04<00:09, 21.40it/s]Loading weights:  36%|███▌      | 104/291 [00:04<00:05, 32.96it/s]Loading weights:  42%|████▏     | 121/291 [00:04<00:03, 46.03it/s]Loading weights:  46%|████▋     | 135/291 [00:04<00:02, 57.46it/s]Loading weights:  52%|█████▏    | 150/291 [00:06<00:05, 26.59it/s]Loading weights:  55%|█████▍    | 159/291 [00:08<00:10, 12.48it/s]Loading weights:  60%|██████    | 175/291 [00:08<00:06, 18.43it/s]Loading weights:  64%|██████▍   | 186/291 [00:08<00:04, 23.42it/s]Loading weights:  70%|██████▉   | 203/291 [00:08<00:02, 33.82it/s]Loading weights:  76%|███████▌  | 220/291 [00:08<00:01, 45.91it/s]Loading weights:  80%|████████  | 233/291 [00:08<00:01, 55.56it/s]Loading weights:  85%|████████▍ | 246/291 [00:10<00:02, 18.05it/s]Loading weights:  88%|████████▊ | 256/291 [00:11<00:01, 19.19it/s]Loading weights:  93%|█████████▎| 271/291 [00:11<00:00, 27.05it/s]Loading weights:  98%|█████████▊| 285/291 [00:11<00:00, 35.85it/s]Loading weights: 100%|██████████| 291/291 [00:11<00:00, 25.66it/s]
+2026-09-07 07:49:24,948 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-09-07 07:49:24,976 INFO httpx: HTTP Request: GET https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-09-07 07:49:24,989 INFO src.eval.predict: [1/12] CI
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+2026-09-07 07:49:50,297 INFO src.eval.predict: [2/12] DG
+2026-09-07 07:50:05,362 INFO src.eval.predict: [3/12] EA
+2026-09-07 07:50:18,582 INFO src.eval.predict: [4/12] EXC
+2026-09-07 07:50:37,293 INFO src.eval.predict: [5/12] GE
+2026-09-07 07:50:47,869 INFO src.eval.predict: [6/12] LRCX
+2026-09-07 07:51:02,876 INFO src.eval.predict: [7/12] MCD
+2026-09-07 07:51:20,241 INFO src.eval.predict: [8/12] MMM
+2026-09-07 07:51:34,026 INFO src.eval.predict: [9/12] NFLX
+2026-09-07 07:51:52,297 INFO src.eval.predict: [10/12] PANW
+2026-09-07 07:53:11,789 INFO src.eval.predict: [11/12] PLD
+2026-09-07 07:53:29,061 INFO src.eval.predict: [12/12] WFC
+2026-09-07 07:53:36,261 INFO eval: generated 12, cached 0, failed 0, truncated 0, refused 0
+
+### base-llama-schema  (n=12)
+
+| Metric | Value | 95% CI |
+| --- | --- | --- |
+| Schema valid (strict) | 0.0% | [0.0%, 0.0%] |
+| Schema valid (after fence/prose stripping) | 91.7% | [75.0%, 100.0%] |
+| Numeric accuracy (all fields) | 83.3% | [64.6%, 97.9%] |
+| Risk category F1 (macro) | 43.5% | [31.9%, 54.1%] |
+| Risk match F1 (macro, lower bound) | 40.9% | [25.8%, 55.5%] |
+| Category accuracy among matched | 50.9% | -- |
+
+| Numeric field | accuracy | 95% CI | exact | close | scale err | wrong | missing | spurious | n/a |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| revenue | 91.7% | [75.0%, 100.0%] | 8 | 3 | 0 | 0 | 1 | 0 | 0 |
+| net_income | 75.0% | [50.0%, 100.0%] | 8 | 1 | 0 | 2 | 1 | 0 | 0 |
+| total_assets | 83.3% | [58.3%, 100.0%] | 9 | 1 | 0 | 1 | 1 | 0 | 0 |
+| eps_diluted | 83.3% | [58.3%, 100.0%] | 10 | 0 | 0 | 1 | 1 | 0 | 0 |
+
+_Intervals are percentile bootstrap over filings (10,000 resamples, seed 0). Filings are the resampling unit because numeric fields within one filing are correlated._
+
+_Risk scoring covers 11 of 12 filings; 1 filing satisfies Item 1A by cross-reference and contains no risk text._
+
+Wrote data/eval/reports/base-llama-schema_schema_test.json
+=== TRAINED MODE (what fine-tuning teaches) Mon Sep  7 07:53:37 UTC 2026 ===
+2026-09-07 07:53:37,932 INFO eval: Scoring 12 examples from test.jsonl
+2026-09-07 07:53:41,612 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-09-07 07:53:41,732 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-09-07 07:53:41,763 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-09-07 07:53:41,854 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-09-07 07:53:42,896 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.1-8B-Instruct "HTTP/1.1 200 OK"
+2026-09-07 07:53:42,950 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+`torch_dtype` is deprecated! Use `dtype` instead!
+2026-09-07 07:53:44,011 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/291 [00:00<?, ?it/s]Loading weights:   0%|          | 1/291 [00:00<00:34,  8.29it/s]Loading weights:   1%|          | 2/291 [00:00<00:36,  7.98it/s]Loading weights:   3%|▎         | 10/291 [00:00<00:07, 36.29it/s]Loading weights:   8%|▊         | 23/291 [00:00<00:03, 68.87it/s]Loading weights:  14%|█▍        | 41/291 [00:00<00:02, 102.45it/s]Loading weights:  20%|██        | 59/291 [00:00<00:01, 122.70it/s]Loading weights:  26%|██▋       | 77/291 [00:00<00:01, 138.07it/s]Loading weights:  32%|███▏      | 94/291 [00:00<00:01, 142.30it/s]Loading weights:  38%|███▊      | 110/291 [00:00<00:01, 146.72it/s]Loading weights:  43%|████▎     | 125/291 [00:01<00:01, 142.74it/s]Loading weights:  48%|████▊     | 140/291 [00:01<00:01, 141.60it/s]Loading weights:  54%|█████▍    | 158/291 [00:01<00:00, 148.64it/s]Loading weights:  60%|██████    | 176/291 [00:01<00:00, 155.92it/s]Loading weights:  66%|██████▋   | 193/291 [00:01<00:00, 153.05it/s]Loading weights:  72%|███████▏  | 209/291 [00:01<00:00, 146.01it/s]Loading weights:  77%|███████▋  | 224/291 [00:01<00:00, 143.19it/s]Loading weights:  82%|████████▏ | 239/291 [00:01<00:00, 143.92it/s]Loading weights:  88%|████████▊ | 257/291 [00:01<00:00, 150.24it/s]Loading weights:  94%|█████████▍| 274/291 [00:02<00:00, 153.90it/s]Loading weights: 100%|█████████▉| 290/291 [00:02<00:00, 155.53it/s]Loading weights: 100%|██████████| 291/291 [00:02<00:00, 132.46it/s]
+2026-09-07 07:53:47,781 INFO httpx: HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-09-07 07:53:47,790 INFO src.eval.predict: [1/12] CI
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+2026-09-07 07:54:04,472 INFO src.eval.predict: [2/12] DG
+2026-09-07 07:54:26,908 INFO src.eval.predict: [3/12] EA
+2026-09-07 07:54:42,906 INFO src.eval.predict: [4/12] EXC
+2026-09-07 07:54:58,239 INFO src.eval.predict: [5/12] GE
+2026-09-07 07:55:11,219 INFO src.eval.predict: [6/12] LRCX
+2026-09-07 07:55:27,248 INFO src.eval.predict: [7/12] MCD
+2026-09-07 07:55:39,043 INFO src.eval.predict: [8/12] MMM
+2026-09-07 07:55:51,926 INFO src.eval.predict: [9/12] NFLX
+2026-09-07 07:56:17,198 INFO src.eval.predict: [10/12] PANW
+2026-09-07 07:57:26,676 INFO src.eval.predict: [11/12] PLD
+2026-09-07 07:57:38,436 INFO src.eval.predict: [12/12] WFC
+2026-09-07 07:57:46,118 INFO eval: generated 12, cached 0, failed 0, truncated 0, refused 0
+
+### base-llama-trained  (n=12)
+
+| Metric | Value | 95% CI |
+| --- | --- | --- |
+| Schema valid (strict) | 0.0% | [0.0%, 0.0%] |
+| Schema valid (after fence/prose stripping) | 0.0% | [0.0%, 0.0%] |
+| Numeric accuracy (all fields) | 0.0% | [0.0%, 0.0%] |
+| Risk category F1 (macro) | 0.0% | [0.0%, 0.0%] |
+| Risk match F1 (macro, lower bound) | 0.0% | [0.0%, 0.0%] |
+| Category accuracy among matched | -- | -- |
+
+| Numeric field | accuracy | 95% CI | exact | close | scale err | wrong | missing | spurious | n/a |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| revenue | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+| net_income | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+| total_assets | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+| eps_diluted | 0.0% | [0.0%, 0.0%] | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+
+_Intervals are percentile bootstrap over filings (10,000 resamples, seed 0). Filings are the resampling unit because numeric fields within one filing are correlated._
+
+_Risk scoring covers 11 of 12 filings; 1 filing satisfies Item 1A by cross-reference and contains no risk text._
+
+Wrote data/eval/reports/base-llama-trained_trained_test.json
+=== BASELINE_DONE Mon Sep  7 07:57:47 UTC 2026 ===

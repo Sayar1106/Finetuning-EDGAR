@@ -19,13 +19,23 @@ teacher's own usage because the prompt never defined them
 
 ## Results
 
-_Fine-tuned rows populated after training._
-
 | Model                      | Schema-valid % | Numeric exact-match | Risk-factor F1 |
 |-----------------------------|:---:|:---:|:---:|
-| Llama 3.1 8B (base, few-shot) | — | — | — |
-| Llama 3.1 8B (fine-tuned)     | — | — | — |
+| Llama 3.1 8B (base, prose prompt) | 0 / 0 strict | 0.0 | 0.0 |
+| Llama 3.1 8B (base, schema prompt) | 91.7 / 0 strict | 83.3 | 43.5 |
+| **Llama 3.1 8B (fine-tuned)** | **100 / 100 strict** | **97.9** | **77.3** |
 | Sonnet 5 (zero-shot, schema prompt) | 100 / 33.3 strict | 97.9 | 79.2 |
+
+The fine-tuned row is the student under the prose prompt it was trained on; the base rows are the
+same weights under both prompts ([D17](docs/decisions.md#d17--two-prompt-modes-both-published)).
+Run 2026-09-07 on one A100-SXM4-80GB, reports checked in under `data/eval/reports/`.
+
+**Strict schema validity is where fine-tuning wins outright: 0% → 100%.** The base model never once
+emitted parseable JSON — only fence-and-prose stripping recovers 91.7% of it — and Sonnet manages 33.3%.
+On the numbers themselves the student matches the frontier model (97.9 vs 97.9) and lands just under
+it on risk F1 (77.3 vs 79.2), so the honest claim is *parity with Sonnet on content, a decisive win on
+output discipline*, not a general accuracy win. Base numeric accuracy of 83.3% under the schema prompt
+is the figure that keeps this honest: most of the numeric gain was already there before fine-tuning.
 
 12 held-out companies, unconstrained decoding, $0.34. Run 2026-08-02; the full report is checked in
 at `data/eval/reports/claude-sonnet-5_schema_test.json`. Schema-valid is reported after fence
