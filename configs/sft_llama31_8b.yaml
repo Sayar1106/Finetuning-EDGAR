@@ -1,6 +1,10 @@
 # QLoRA SFT for structured extraction from 10-K filings.
-# Checked in so every run is reproducible from a commit; src/train/sft.py snapshots the resolved
-# config next to each adapter.
+# Checked in so the hyperparameters of every run are recoverable from a commit, and
+# src/train/sft.py snapshots the resolved config next to each adapter. That is narrower than
+# reproducibility: the `train` extras are not pinned, so a rerun resolves whatever torch,
+# transformers and unsloth are current. The 2026-09-07 run has since demonstrated that even fixed
+# hyperparameters and greedy decoding do not reproduce bit-for-bit across GPUs -- see Q7 in
+# docs/decisions.md.
 
 model_id: meta-llama/Llama-3.1-8B-Instruct
 run_name: llama31-8b-qlora

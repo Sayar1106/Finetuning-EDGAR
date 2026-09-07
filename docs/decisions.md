@@ -765,12 +765,27 @@ resolves to different dependency versions over time — which already bit the pr
 eval harness. The `train` extras are deliberately **not** locked: torch and friends are never
 installed on this machine ([D13](#d13--qlora--unsloth-on-a-rented-gpu-not-local),
 [I4](#i4--macos-purged-the-entire-project-directory)), so a lock generated here would be fabricated
-rather than resolved. It gets generated on the GPU host at training time and committed as
+rather than resolved. The intent was to generate it on the GPU host at training time and commit it as
 `requirements-train.lock`.
 
-So the accurate claim is: **the data and eval path is reproducible from a commit; the training path is
-not yet.** That is narrower than `configs/sft_llama31_8b.yaml`'s comment, which should be softened to
-match rather than left to overstate.
+**That did not happen, and the window has closed.** The 2026-09-07 A100 run trained, pushed the
+adapter, and was torn down without anyone running `pip freeze`. The pod is deleted, so the exact
+resolution that produced the published weights is gone. `docs/runs/finetune.log` preserves three
+versions incidentally — torch 2.11.0+cu130, transformers 5.5.0, unsloth 2026.9.2 — and that is all
+there is. A lockfile assembled now from memory or from a fresh install would be exactly the
+fabrication this section already refuses: it would name today's resolution while implying it was the
+one that trained the adapter. Recording the gap is the honest option, so the gap is recorded.
+
+Two things soften the loss. The install was unpinned (`pip install unsloth peft trl bitsandbytes
+datasets wandb accelerate`), so even a lockfile would have described one resolution of a command
+that has no fixed answer — the recipe is in the log either way. And the failure mode a lockfile
+guards against, silent version drift changing results, is now measured rather than hypothetical
+further down this section.
+
+So the accurate claim is: **the data and eval path is reproducible from a commit; the training path
+is not, and for the published adapter it cannot be made so retroactively.**
+`configs/sft_llama31_8b.yaml`'s header comment was softened on 2026-09-07 to claim only that
+hyperparameters are recoverable, which is what is actually true.
 
 Two limits remain, and neither is a lockfile problem. Results come from a **single seed and a single
 run**, so a margin between configurations carries no variance estimate — the bootstrap intervals in

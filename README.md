@@ -103,6 +103,10 @@ See extras in `pyproject.toml` for stage-specific dependencies (`labels`, `train
    eval reports for every run are checked in under `data/eval/reports/`, and the model card is at
    [`docs/model_card.md`](docs/model_card.md).
 
+A side-by-side of what the base and fine-tuned models actually emit for one filing, with the raw
+outputs and the full per-filing table: [`docs/demo.html`](docs/demo.html) (open it locally; it needs
+no network or GPU).
+
 Module-level data flow, caches, and where each artifact comes from:
 [`docs/architecture.md`](docs/architecture.md).
 
