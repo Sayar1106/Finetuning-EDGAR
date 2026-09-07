@@ -28,7 +28,9 @@ teacher's own usage because the prompt never defined them
 
 The fine-tuned row is the student under the prose prompt it was trained on; the base rows are the
 same weights under both prompts ([D17](docs/decisions.md#d17--two-prompt-modes-both-published)).
-Run 2026-09-07 on one A100-SXM4-80GB, reports checked in under `data/eval/reports/`.
+The three Llama rows were run 2026-09-07 on one A100-SXM4-80GB; the Sonnet 5 row is an API run from
+2026-08-02, with no temperature control available and extended thinking enabled, so it is not a
+same-session comparison. All reports are checked in under `data/eval/reports/`.
 
 **Strict schema validity is where fine-tuning wins outright: 0% → 100%.** The base model never once
 emitted parseable JSON — only fence-and-prose stripping recovers 91.7% of it — and Sonnet manages 33.3%.
