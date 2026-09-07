@@ -19,7 +19,7 @@ teacher's own usage because the prompt never defined them
 
 ## Results
 
-| Model                      | Schema-valid % | Numeric exact-match | Risk-factor F1 |
+| Model                      | Schema-valid % | Numeric accuracy (exact or ±1%) | Risk-factor F1 |
 |-----------------------------|:---:|:---:|:---:|
 | Llama 3.1 8B (base, prose prompt) | 0 / 0 strict | 0.0 | 0.0 |
 | Llama 3.1 8B (base, schema prompt) | 91.7 / 0 strict | 83.3 | 43.5 |
@@ -74,8 +74,6 @@ src/
   train/    # QLoRA fine-tuning (Unsloth)
   eval/     # extraction metrics + baseline/comparison runs
 configs/    # training + eval YAML configs
-notebooks/  # EDA, error analysis
-app/        # Gradio demo
 tests/      # parser + metrics unit tests
 docs/       # design notes, deferred ideas
 ```

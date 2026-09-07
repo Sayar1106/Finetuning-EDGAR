@@ -218,7 +218,7 @@ opponent. Cost of the choice is recorded per run.
 - `trained` — the exact prose system prompt the student is fine-tuned on, no field names.
 - `schema` — that prompt plus the JSON schema of the target.
 
-The student does not need the schema in-prompt because 152 training examples put it in the weights.
+The student does not need the schema in-prompt because 186 training examples put it in the weights.
 Under the prose-only prompt Sonnet scores **0%** — it invents its own field names (`total_revenues`,
 `diluted_eps`, risk factors as bare strings). That is a real measure of what fine-tuning teaches,
 but it would be a strawman as *the* competitive baseline. The schema-prompt run is the number the
@@ -796,8 +796,11 @@ dataset is not encumbered.
   the README's figures are tool output rather than hand arithmetic. What *is* checked automatically:
   every example with an empty gold risk list is flagged `risk_factors_by_reference` (4 of 220 — USB
   ×3, WFC), so none is silently scored against an empty target.
-- **Base-model baseline not yet run.** It is the "before" in the headline comparison and should be
-  the first thing the rented GPU does.
+- **Base-model baseline: run 2026-09-07 and closed.** Both prompt modes are in
+  `data/eval/reports/base-llama-{schema,trained}_*_test.json` (`docs/runs/baseline.log`). Under the
+  trained-mode prose prompt the base model scores 0 on everything; under the schema prompt it reaches
+  91.7% lenient / 0% strict schema validity, 83.3 numeric, 43.5 risk F1. The "before" in the headline
+  comparison is a measurement now, not a placeholder.
 - **Revenue is unrecoverable for 4 of 220 filings** (Duke Energy FY2025, NextEra FY2025, Truist
   FY2023 and FY2024). Same root cause as [I2](#i2--the-convenience-dict-was-wrong-for-34-of-182-filings):
   utilities and banks do not tag `us-gaap:Revenues`, and for these four the convenience dict has

@@ -94,11 +94,12 @@ flowchart TB
     ADAPTER --> APP
 
     classDef pending stroke-dasharray:4,stroke-width:1px
-    class ADAPTER,APP pending
+    class APP pending
 ```
 
-Dashed = not yet produced. The training code is written and unit-tested but has never been executed
-against the real model; the adapter, the fine-tuned eval rows, and the demo all wait on a rented GPU.
+Dashed = not yet produced. As of the 2026-09-07 A100 run the adapter exists (pushed to the Hub;
+`docs/runs/finetune.log`) and the fine-tuned eval rows are checked in under `data/eval/reports/`
+(`docs/runs/fteval.log`); only the ship step -- demo and a written model card -- is still dashed.
 
 ## What the shape encodes
 
