@@ -181,12 +181,18 @@ def run(config: dict, smoke: bool = False, output_dir: Path | None = None,
             "hub.enabled is set but HF_TOKEN is empty -- checkpoints stay on local disk only"
         )
     if hub_enabled:
+        # NOT hub_token=token. TrainingArguments is pickled verbatim into training_args.bin, which
+        # the Trainer then uploads alongside the weights -- so passing the token here writes a live
+        # write-scoped credential into a published artifact. It happened: the 2026-09-07 run put the
+        # token in both training_args.bin and last-checkpoint/training_args.bin, found during the
+        # pre-publication scan. huggingface_hub reads HF_TOKEN from the environment on its own, and
+        # load_dotenv() above has already put it there, so authentication is unaffected.
+        os.environ.setdefault("HF_TOKEN", token)
         training.update(
             push_to_hub=True,
             hub_model_id=hub["model_id"],
             hub_strategy=hub.get("strategy", "checkpoint"),
             hub_private_repo=bool(hub.get("private", True)),
-            hub_token=token,
         )
         logger.info("Checkpoints push to https://huggingface.co/%s", hub["model_id"])
 

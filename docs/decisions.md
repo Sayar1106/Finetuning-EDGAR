@@ -566,6 +566,38 @@ and carries an `int` CIK — a string would be passed through as a ticker and fa
 exactly the mechanism that would have picked `MMCP`. Renames are rare enough to pin explicitly and
 review in a diff.
 
+### I6 — The HF write token was published inside `training_args.bin`
+Caught 2026-09-07 by a pre-publication scan, on the way to making the Hub repo public. Both
+`training_args.bin` and `last-checkpoint/training_args.bin` contained the **live, write-scoped**
+Hugging Face token, byte-for-byte.
+
+The mechanism is unremarkable, which is what makes it worth writing down.
+[D31](#d31--checkpoints-leave-the-box-as-they-are-written) added `hub_token=token` to
+`TrainingArguments` so checkpoints could push as they were written. `TrainingArguments` is a
+dataclass that the Trainer pickles verbatim to `training_args.bin` — and then uploads alongside the
+weights. So the credential that authorised the upload travelled inside it. Nothing warned: the push
+succeeded, the file is 5KB of opaque pickle, and the repo was private, so no scanner complained.
+
+Three responses, in order:
+
+1. **Rotate.** The two files were deleted from `HEAD`, but a Hub repo is a git repo and the blobs
+   remain reachable in history. Deleting the file is not remediation; rotating the credential is.
+   The exposed token must be treated as compromised regardless of the repo ever having been public.
+2. **Remove the cause.** `src/train/sft.py` no longer passes `hub_token`. `huggingface_hub` reads
+   `HF_TOKEN` from the environment on its own, and `load_dotenv()` has already put it there, so
+   authentication is unchanged and nothing is serialised.
+3. **Guard it.** `tests/test_train_data.py::test_hub_config_never_carries_a_token` reads `sft.py` as
+   text and fails on any non-comment `hub_token` line. It reads the file rather than importing the
+   module deliberately: `sft.py` needs the `train` extras this machine does not have, and an
+   `importorskip` would have silently disarmed the guard on the only machine that runs the suite.
+
+**The generalisable lesson: a credential passed to a library is a credential you have to trace to
+where it comes to rest.** The token was handled correctly at every step a person would think to check
+— it was in `.env`, `.env` was gitignored, it was never printed, never committed, never sent to a
+third party. It leaked because a framework object serialises its own fields. The scan that caught it
+took thirty seconds and ran only because publishing was the next step; without that publish nothing
+would have surfaced it.
+
 ---
 
 ## Anticipated questions

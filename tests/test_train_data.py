@@ -138,3 +138,27 @@ def test_collator_pads_labels_with_ignore_index():
     padded_row = batch["labels"][0].tolist()
     assert padded_row[-1] == IGNORE_INDEX
     assert batch["attention_mask"][0].tolist()[-1] == 0
+
+
+# --- credentials must not reach TrainingArguments -------------------------------------------------
+# TrainingArguments is pickled verbatim into training_args.bin and uploaded with the weights, so a
+# token passed here becomes a published credential. The 2026-09-07 run did exactly that; this test
+# is the regression guard.
+
+def test_hub_config_never_carries_a_token() -> None:
+    # Read the source as text rather than importing: sft.py needs the `train` extras, which this
+    # machine deliberately does not have, and an importorskip here would silently disarm the guard
+    # on the only machine that runs the suite.
+    from pathlib import Path
+
+    source = (Path(__file__).resolve().parents[1] / "src" / "train" / "sft.py").read_text()
+    offending = [
+        line.strip()
+        for line in source.splitlines()
+        if "hub_token" in line and not line.lstrip().startswith("#")
+    ]
+    assert not offending, (
+        "hub_token in TrainingArguments serializes the credential into training_args.bin, which "
+        "the Trainer uploads alongside the weights. Use the HF_TOKEN environment variable instead "
+        f"-- huggingface_hub reads it directly. Offending line(s): {offending}"
+    )
